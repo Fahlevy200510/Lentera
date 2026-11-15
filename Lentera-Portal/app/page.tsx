@@ -548,13 +548,13 @@ export default function PortalHome() {
     }
 
     const text =
-      "Selamat datang di LENTERA — Papan Belajar Rangkaian Listrik Taktil dan Interaktif untuk Siswa Tunanetra. Sistem ini menghubungkan balok fisik di tangan Anda dengan sensor pintar di bawah papan untuk memberikan umpan balik suara seketika. Untuk memulai, Anda dapat meletakkan kartu identitas siswa di atas papan fisik, atau memilih tombol LENTERA Lab di layar. Selamat bereksplorasi!";
+      "Selamat datang di LENTERA, media belajar rangkaian listrik taktil dan suara. Silakan letakkan kartu identitasmu di atas papan fisik untuk memulai.";
 
     speakingRef.current = true;
     setSpeaking(true);
 
     speakNarration(text, {
-      rate: 0.94,
+      rate: 1.0,
       pitch: 1.0,
       tag: "landing-intro",
       onEnd: () => {
@@ -825,7 +825,7 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: overrideSlot,
                     });
-                    const confirmText = `Mode ${chosen.name} aktif! Silakan angkat balok dari papan agar papan bersih sebelum masuk ke LENTERA Lab.`;
+                    const confirmText = `Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
                     requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
                     return;
                   }
@@ -844,7 +844,7 @@ export default function PortalHome() {
                     lastLiftRemindTime = now;
                     playEarcon("clue");
                     speakNarration(
-                      `Silakan angkat semua balok dari papan fisik agar papan bersih sebelum membuka ${awaitingLiftTarget.label}.`,
+                      `Silakan angkat kartu dari papan untuk membuka ${awaitingLiftTarget.label}.`,
                       { rate: awaitingLiftTarget.rate, pitch: 1.02, tag: "landing-lift-remind" }
                     );
                   }
@@ -896,7 +896,7 @@ export default function PortalHome() {
                     selectedSlot: chosenSlot,
                   });
 
-                  const confirmText = `Mode ${chosen.name} aktif! Silakan angkat balok dari papan agar papan bersih sebelum masuk ke LENTERA Lab.`;
+                  const confirmText = `Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
                   requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
                   return;
                 }
@@ -923,7 +923,7 @@ export default function PortalHome() {
                         isRedirectingRef.current = true;
                         playEarcon("clear");
                         speakNarration(
-                          `Kecepatan Mode ${savedModeName} dipertahankan. Papan sudah bersih, membuka LENTERA Lab.`,
+                          `Mode ${savedModeName} aktif. Membuka LENTERA Lab.`,
                           {
                             rate: savedRate,
                             pitch: 1.02,
@@ -931,7 +931,7 @@ export default function PortalHome() {
                             onEnd: () => router.push("/aruco"),
                           }
                         );
-                        setTimeout(() => router.push("/aruco"), 3200);
+                        setTimeout(() => router.push("/aruco"), 2400);
                       }
                     }, 10000);
                   }
@@ -987,8 +987,8 @@ export default function PortalHome() {
                       grade: detectedUserMeta.grade,
                     })
                   );
-                  const speechText = `Selamat datang, Bapak atau Ibu Guru! Kartu identitas guru terdeteksi di sel ${detectedUserCell}. Silakan angkat kartu dari papan agar papan bersih sebelum membuka Dashboard Guru LENTERA Learn.`;
-                  requestLiftThenNavigate("/dashboard", "Dashboard Guru LENTERA Learn", speechText, 0.95);
+                  const speechText = `Halo Bapak atau Ibu Guru! Silakan angkat kartu untuk membuka Dashboard Guru.`;
+                  requestLiftThenNavigate("/dashboard", "Dashboard Guru LENTERA Learn", speechText, 1.0);
                   return;
                 }
 
@@ -1019,7 +1019,7 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: detectedUserCell,
                     });
-                    const speechText = `Selamat datang, ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Silakan angkat balok dari papan agar papan bersih sebelum masuk ke LENTERA Lab.`;
+                    const speechText = `Halo ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
                     requestLiftThenNavigate("/aruco", "LENTERA Lab", speechText, chosen.rate);
                     return;
                   }
@@ -1040,7 +1040,7 @@ export default function PortalHome() {
                     currentMode: currentMode,
                   });
 
-                  const promptText = `Selamat datang, ${detectedUserMeta.name}! Kartu identitasmu terdeteksi. Kecepatan suaramu saat ini adalah Mode ${currentMode}. Jika ingin mengganti kecepatan, pindahkan balokmu ke baris kedua: A2 untuk Normal, B2 Sedang, C2 Cepat, D2 Sangat Cepat, atau E2 Maksimal. Jika ingin tetap menggunakan kecepatan ini, biarkan saja balokmu di tempatnya.`;
+                  const promptText = `Halo ${detectedUserMeta.name}! Kecepatan saat ini: ${currentMode}. Untuk mengubah, pindahkan kartu ke A2 Normal, B2 Sedang, C2 Cepat, D2 Sangat Cepat, atau E2 Maksimal. Biarkan di tempat jika tidak diubah.`;
 
                   const promptLiftForDefaultSpeed = () => {
                     if (redirected || awaitingLiftTarget) return;
@@ -1050,7 +1050,7 @@ export default function PortalHome() {
                       isRedirectingRef.current = true;
                       playEarcon("clear");
                       speakNarration(
-                        `Kecepatan Mode ${currentMode} dipertahankan. Papan sudah bersih, membuka LENTERA Lab.`,
+                        `Mode ${currentMode} aktif. Membuka LENTERA Lab.`,
                         {
                           rate: currentRate,
                           pitch: 1.02,
@@ -1058,12 +1058,12 @@ export default function PortalHome() {
                           onEnd: () => router.push("/aruco"),
                         }
                       );
-                      setTimeout(() => router.push("/aruco"), 3200);
+                      setTimeout(() => router.push("/aruco"), 2400);
                     } else {
                       requestLiftThenNavigate(
                         "/aruco",
                         "LENTERA Lab",
-                        `Kecepatan Mode ${currentMode} dipertahankan. Silakan angkat balok dari papan agar papan bersih sebelum masuk ke LENTERA Lab.`,
+                        `Mode ${currentMode} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`,
                         currentRate
                       );
                     }
@@ -1097,7 +1097,7 @@ export default function PortalHome() {
                 const label = COMPONENT_LABEL[comp] || "komponen";
                 const activeStudent = getActiveStudent();
                 const currentRate = getSavedSpeechRate();
-                const speechText = `Balok ${label} terdeteksi! Melanjutkan sesi untuk ${activeStudent.name}. Silakan angkat balok dari papan agar papan bersih sebelum masuk ke LENTERA Lab.`;
+                const speechText = `Balok ${label} terdeteksi untuk ${activeStudent.name}. Silakan angkat balok untuk masuk ke LENTERA Lab.`;
                 requestLiftThenNavigate("/aruco", "LENTERA Lab", speechText, currentRate);
               }
             }
