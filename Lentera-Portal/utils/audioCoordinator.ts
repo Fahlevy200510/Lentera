@@ -131,8 +131,8 @@ export function speakNarration(text: string, options: SpeakOptions = {}): void {
     if (mySeq !== currentSpeechSeq) return;
     activeTimer = null;
     try {
-      const phoneticText = normalizeIndonesianPhonetics(cleanText);
-      const chunks = splitIntoSentenceChunks(phoneticText, 170);
+      const rawChunks = splitIntoSentenceChunks(cleanText, 170);
+      const chunks = rawChunks.map((c) => normalizeIndonesianPhonetics(c)).filter(Boolean);
       if (chunks.length === 0) {
         (window as any).__lenteraSpeaking = false;
         options.onEnd?.();

@@ -9,6 +9,10 @@
 export function normalizeIndonesianPhonetics(text: string): string {
   if (!text) return "";
   return text
+    // Pisahkan kata depan "di"/"ke" dari koordinat B/D agar bunyi "di" (/d/) tidak menyarukan huruf B menjadi D (contoh: "di B2" -> "di, B, 2")
+    .replace(/\b(di|ke)\s+([BD][1-5])\b/gi, "$1, $2")
+    // Jeda artikulasi antara huruf B/D dan angka baris (contoh: "B2" -> "B, 2", "D2" -> "D, 2") agar konsonan awal B dan D terucap jelas
+    .replace(/\b([BD])([1-5])\b/g, "$1, $2")
     // Huruf kapital mandiri L -> El (contoh: "Kabel L", "huruf L", "sudut L")
     .replace(/\bL\b/g, "El")
     // Huruf kapital mandiri T -> Te (contoh: "Kabel T", "huruf T", "cabang T")
