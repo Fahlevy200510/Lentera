@@ -769,43 +769,82 @@ const ARUCO_MARKERS = [
   },
 ];
 
-/* ---------------------------------------------------------------- Syllabus Chapters */
-const SYLLABUS_CHAPTERS = [
+/* ---------------------------------------------------------------- Guidebook & Syllabus Chapters */
+const GUIDEBOOK_CHAPTERS = [
   {
-    num: "01",
-    title: "Mengenal LENTERA & Keselamatan Praktik",
-    desc: "Pengantar filosofi belajar taktil, orientasi posisi papan 5×5 (A1–E5), dan panduan keselamatan sirkuit tegangan rendah.",
-    badge: "Orientasi Awal",
-  },
-  {
-    num: "02",
-    title: "Anatomi Balok Taktil & Simbol Braille",
-    desc: "Panduan cara meraba tekstur timbul baterai, saklar, lampu LED, kabel lurus, kabel siku L, dan kabel cabang T.",
-    badge: "Sensori Taktil",
+    num: "01–02",
+    title: "Mengenal LENTERA & 8 Langkah Alur Pengoperasian",
+    desc: "Fitur utama Smart Tactile Board 5×5 serta ringkasan 8 langkah pemakaian dari menyalakan hotspot hingga mematikan alat.",
+    badge: "Pengenalan Alat",
   },
   {
     num: "03",
-    title: "Modul Pengenalan & Kuis Sensorik Mandiri",
-    desc: "SOP pelaksanaan kuis audio interaktif di sel C3 untuk menguji kemandirian identifikasi komponen siswa.",
-    badge: "Praktik Terpandu",
+    title: "Menyalakan Alat & Koneksi Hotspot (LENTERA)",
+    desc: "Pengaturan hotspot SSID LENTERA (password: qwerty123), pemasangan adaptor USB-C, tombol power stainless, dan indikator nada buzzer.",
+    badge: "Persiapan Alat",
   },
   {
-    num: "04",
-    title: "Hukum Sirkuit Seri: Satu Lintasan Aliran",
-    desc: "Teori dan praktikum 12 langkah sirkuit seri. Konsep pembagian tegangan dan pengaruh mematikan salah satu saklar.",
-    badge: "Sirkuit Seri",
+    num: "04–05",
+    title: "Login Blok Identitas & Kecepatan Narasi (A2–E2)",
+    desc: "Login otomatis tanpa mengetik dengan blok Via (ID 35), Amira (ID 36), Luthfi (ID 37), serta 5 mode kecepatan suara di baris 2.",
+    badge: "Login & Suara",
   },
   {
-    num: "05",
-    title: "Hukum Sirkuit Paralel: Percabangan Mandiri",
-    desc: "Teori dan praktikum kabel simpang T. Pemahaman arus bercabang dan independensi beban lampu di masing-masing cabang.",
-    badge: "Sirkuit Paralel",
+    num: "06–07",
+    title: "Peta Navigasi Papan & 5 Modul Pembelajaran",
+    desc: "Fungsi baris 1 (A1 Pengenalan, B1 Kuis Taktil, C1 Seri, D1 Paralel, E1 Detektif Sirkuit), titik pusat C3, dan baris 5 (A5, C5, E5).",
+    badge: "Inti Praktikum",
   },
   {
-    num: "06",
-    title: "Detektif Sirkuit, Rapor AI & Evaluasi Guru",
-    desc: "Lembar asesmen keterampilan raba, cara membaca grafik radar penguasaan siswa, dan petunjuk pencetakan Rapor PDF.",
-    badge: "Evaluasi & Asesmen",
+    num: "08–09",
+    title: "Fitur Tambahan (A5, C5, E5) & Alur Selesai Modul",
+    desc: "Tanya AI Live Tutor push-to-talk di A5, Eksplorasi Bebas di C5, keluar sesi di E5, serta pilihan A1 (Lanjut) atau E1 (Istirahat).",
+    badge: "Kontrol Mandiri",
+  },
+  {
+    num: "10–11",
+    title: "Mematikan Alat dengan Aman & Solusi Kendala Umum",
+    desc: "Prosedur melepas tombol power (pop out) hingga LED padam, tabel pemecahan kendala umum, dan aturan keselamatan.",
+    badge: "SOP & Keselamatan",
+  },
+];
+
+const SYLLABUS_CHAPTERS = [
+  {
+    num: "Pertemuan 1",
+    title: "Berkenalan dengan LENTERA & Aturan Aman (LKPD 1)",
+    desc: "Orientasi tepi papan 5×5 (A1–E5), login blok identitas, memilih kecepatan narasi (A2–E2), latihan Tanya AI (A5), dan prosedur keselamatan.",
+    badge: "2 JP • Orientasi",
+  },
+  {
+    num: "Pertemuan 2",
+    title: "Mengenal Enam Balok Komponen (LKPD 2)",
+    desc: "Identifikasi rabaan baterai, saklar, kabel lurus, kabel siku L, kabel cabang T, dan lampu di C3 (A1) serta evaluasi Kuis Taktil (B1).",
+    badge: "2 JP • Taktil",
+  },
+  {
+    num: "Pertemuan 3",
+    title: "Rangkaian Tertutup dan Terbuka (LKPD 3)",
+    desc: "Menyusun jalur satu lampu dengan saklar di Mode Eksplorasi Bebas (C5), menguji posisi ON/OFF, dan menelusuri celah jalur terbuka.",
+    badge: "2 JP • Konsep Dasar",
+  },
+  {
+    num: "Pertemuan 4",
+    title: "Rangkaian Seri: Satu Jalur, Dua Lampu (LKPD 4)",
+    desc: "Praktikum terpandu 13 langkah sirkuit seri (C1) serta eksperimen memprediksi dan menguji dampak saat satu lampu dilepas.",
+    badge: "2 JP • Sirkuit Seri",
+  },
+  {
+    num: "Pertemuan 5",
+    title: "Rangkaian Paralel: Memahami Cabang (LKPD 5)",
+    desc: "Praktikum sirkuit dua cabang mandiri dengan kabel simpang T (D1), menguji saklar tiap cabang, dan membandingkannya dengan seri.",
+    badge: "2 JP • Sirkuit Paralel",
+  },
+  {
+    num: "Pertemuan 6",
+    title: "Misi Akhir: Detektif Sirkuit & Asesmen Unjuk Kerja (LKPD 6)",
+    desc: "Mendiagnosis rangkaian bermasalah secara ilmiah (E1), pendampingan Sokratik (I0–I3), rubrik penilaian, dan laporan akhir siswa.",
+    badge: "2 JP • Evaluasi Akhir",
   },
 ];
 
@@ -814,7 +853,8 @@ export default function PanduanPage() {
   const [selectedCell, setSelectedCell] = useState<string>("A1");
   const [speaking, setSpeaking] = useState<boolean>(false);
   const [showSyllabus, setShowSyllabus] = useState<boolean>(false);
-  const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
+  const [activePdfPreview, setActivePdfPreview] = useState<"panduan" | "modul" | null>(null);
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   const feature = FEATURES.find((f) => f.key === activeFeature) || FEATURES[0];
 
@@ -882,9 +922,9 @@ export default function PanduanPage() {
     });
   };
 
-  const handleDownloadClick = () => {
-    setDownloadSuccess(true);
-    setTimeout(() => setDownloadSuccess(false), 4000);
+  const handleDownloadClick = (docName: string) => {
+    setDownloadSuccess(docName);
+    setTimeout(() => setDownloadSuccess(null), 4000);
   };
 
   const cellDetail: CellDetail =
@@ -1072,132 +1112,284 @@ export default function PanduanPage() {
               }}
             />
 
-            <div className="relative z-10 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#EDE9FE] px-3 py-1 text-[11px] font-extrabold text-[#7C3AED]">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>DOKUMEN RESMI PENDIDIKAN INKLUSIF</span>
+            <div className="relative z-10">
+              <div className="flex flex-col justify-between gap-4 border-b border-[#735CDD]/15 pb-6 lg:flex-row lg:items-center">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#EDE9FE] px-3 py-1 text-[11px] font-extrabold text-[#7C3AED]">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>DOKUMEN RESMI PENDIDIKAN INKLUSIF LENTERA</span>
+                  </div>
+
+                  <h2 className="mt-3 font-heading text-xl sm:text-2xl font-extrabold text-[#1E1938]">
+                    Pusat Unduh Buku Panduan & Modul Ajar (PDF)
+                  </h2>
+
+                  <p className="mt-1.5 max-w-3xl text-xs sm:text-sm leading-relaxed text-[#463E66]">
+                    Dilengkapi dua dokumen resmi siap cetak dan ramah pembaca layar: <strong>Buku Panduan Pengoperasian Alat</strong> (16 halaman) untuk panduan teknis cepat dan <strong>Modul Ajar Praktikum IPA</strong> (65 halaman) berisi 6 pertemuan, 6 LKPD aksesibel, rubrik asesmen, dan panduan pendampingan Sokratik.
+                  </p>
                 </div>
 
-                <h2 className="mt-3 font-heading text-xl sm:text-2xl font-extrabold text-[#1E1938]">
-                  Modul Ajar & Buku Manual LENTERA (PDF)
-                </h2>
-
-                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#463E66]">
-                  Panduan komprehensif bagi Guru Fasilitator SLB, Orang Tua, dan Siswa Tunanetra.
-                  Memuat 6 silabus materi praktikum listrik dasar, transkrip taktil Braille, tata tertib
-                  keamanan sirkuit, serta lembar evaluasi observasi belajar.
-                </p>
-
-                <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 text-[11px]">
-                  <div className="flex items-center gap-2 rounded-xl bg-white/90 p-2 border border-[#735CDD]/15">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="font-semibold text-slate-700">6 Bab Silabus Lengkap</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-white/90 p-2 border border-[#735CDD]/15">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="font-semibold text-slate-700">Siap Cetak & Embosser</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-white/90 p-2 border border-[#735CDD]/15 col-span-2 sm:col-span-1">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="font-semibold text-slate-700">Standar Kurikulum Merdeka</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Box */}
-              <div className="rounded-2xl border border-[#735CDD]/20 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-[#735CDD]" />
-                    <div>
-                      <div className="text-xs font-extrabold text-[#1E1938]">
-                        modul-ajar-lentera.pdf
-                      </div>
-                      <div className="text-[10px] text-slate-500">
-                        Dokumen Panduan Pelaksanaan Praktikum
-                      </div>
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                    Tersedia
-                  </span>
-                </div>
-
-                <div className="mt-4 space-y-2.5">
-                  <a
-                    href="/docs/modul-ajar-lentera.pdf"
-                    download="Modul-Ajar-LENTERA.pdf"
-                    onClick={handleDownloadClick}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7862E2] to-[#5B43C6] px-4 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#735CDD]/25 transition hover:from-[#6B53DE] hover:to-[#4D35B8] active:scale-98"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Unduh Modul Ajar Sekarang (PDF)</span>
-                  </a>
-
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <button
                     onClick={() => setShowSyllabus(!showSyllabus)}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#735CDD]/25 bg-slate-50/70 px-4 py-2 text-xs font-bold text-[#5B43C6] hover:bg-slate-100 transition"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#735CDD]/25 bg-white px-4 py-2.5 text-xs font-bold text-[#5B43C6] shadow-2xs hover:bg-[#FAF8FF] transition"
                   >
                     <BookOpen className="h-3.5 w-3.5" />
-                    <span>{showSyllabus ? "Tutup Pratinjau Silabus" : "Lihat Pratinjau Bab Silabus"}</span>
+                    <span>{showSyllabus ? "Tutup Ringkasan Daftar Isi" : "Lihat Ringkasan Bab & Pertemuan"}</span>
                   </button>
                 </div>
-
-                {downloadSuccess && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 p-2.5 text-[11px] font-bold text-emerald-800 border border-emerald-200 animate-fadeIn">
-                    <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-                    <span>Unduhan dimulai! File tersimpan ke perangkat Anda.</span>
-                  </div>
-                )}
-
-                {/* Practical Upload Note for Teachers */}
-                <div className="mt-4 rounded-xl bg-[#FFF9EE] p-3 text-[11px] leading-relaxed text-[#854D0E] border border-[#F5B841]/30">
-                  <div className="flex items-center gap-1.5 font-bold mb-1">
-                    <Info className="h-3.5 w-3.5 text-[#D97706]" />
-                    <span>Catatan Pengunggahan Manual oleh Guru:</span>
-                  </div>
-                  Jika Bapak/Ibu Guru ingin memperbarui file modul ajar ini dengan naskah terbaru, cukup simpan file PDF Anda dengan nama{" "}
-                  <code className="rounded bg-amber-100 px-1 py-0.5 font-mono font-bold text-amber-900">
-                    modul-ajar-lentera.pdf
-                  </code>{" "}
-                  di dalam folder <code className="rounded bg-amber-100 px-1 py-0.5 font-mono text-amber-900">public/docs/</code>. Tombol unduh di atas akan langsung otomatis menyajikan file terbaru Anda.
-                </div>
               </div>
-            </div>
 
-            {/* Collapsible Syllabus Chapters Preview */}
-            {showSyllabus && (
-              <div className="mt-6 border-t border-[#735CDD]/15 pt-6 animate-fadeIn">
-                <h3 className="font-heading text-sm font-extrabold uppercase tracking-wider text-[#735CDD] mb-4">
-                  Daftar Isi & Silabus Bab Modul Ajar
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {SYLLABUS_CHAPTERS.map((ch, idx) => (
-                    <div
-                      key={ch.num}
-                      className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs hover:border-[#735CDD]/40 transition reveal-popup"
-                      style={{ transitionDelay: `${idx * 60}ms` }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-[#735CDD]">
-                          BAB {ch.num}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                          {ch.badge}
-                        </span>
+              {/* 2 Document Cards Grid: Buku Panduan + Modul Ajar */}
+              <div className="mt-6 grid gap-5 lg:grid-cols-2">
+                {/* CARD 1: BUKU PANDUAN LENTERA */}
+                <div className="flex flex-col justify-between rounded-2xl border-2 border-[#F5B841]/45 bg-white p-5 shadow-sm transition hover:shadow-md">
+                  <div>
+                    <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF3D6] text-[#B45309] border border-[#F5B841]/50">
+                          <BookOpen className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-heading text-sm sm:text-base font-extrabold text-[#1E1938]">
+                              Buku Panduan LENTERA
+                            </span>
+                            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
+                              16 Halaman
+                            </span>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500">
+                            buku-panduan-lentera.pdf • 582 KB
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-2 text-xs font-bold text-[#1E1938]">
-                        {ch.title}
-                      </div>
-                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                        {ch.desc}
-                      </p>
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                        Resmi
+                      </span>
                     </div>
-                  ))}
+
+                    <p className="mt-3 text-xs leading-relaxed text-[#463E66]">
+                      Panduan praktis langkah demi langkah mengoperasikan <strong>Smart Tactile Board</strong>: menyalakan hotspot (<code className="font-mono font-bold">LENTERA</code>), tombol power & indikator buzzer, login blok identitas (<code className="font-mono font-bold">ID 35–37</code>), mengatur kecepatan narasi di baris 2 (<code className="font-mono font-bold">A2–E2</code>), peta navigasi papan 5×5, 5 modul belajar, Tanya AI (<code className="font-mono font-bold">A5</code>), hingga mengatasi kendala umum.
+                    </p>
+
+                    <div className="mt-3.5 flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-600">
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">11 Bab Operasional</span>
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">8 Langkah Cepat</span>
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">Tabel Kendala & Keselamatan</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <a
+                      href="/docs/buku-panduan-lentera.pdf"
+                      download="Buku-Panduan-LENTERA.pdf"
+                      onClick={() => handleDownloadClick("Buku Panduan LENTERA")}
+                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:from-[#B45309] hover:to-[#92400E]"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Unduh Buku Panduan</span>
+                    </a>
+
+                    <button
+                      onClick={() =>
+                        setActivePdfPreview(activePdfPreview === "panduan" ? null : "panduan")
+                      }
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-[#FFF9EE] px-4 py-2.5 text-xs font-bold text-[#92400E] hover:bg-[#FFF3D6] transition"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>
+                        {activePdfPreview === "panduan" ? "Tutup Pratinjau PDF" : "Baca Langsung di Sini"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 2: MODUL AJAR LENTERA */}
+                <div className="flex flex-col justify-between rounded-2xl border-2 border-[#735CDD]/30 bg-white p-5 shadow-sm transition hover:shadow-md">
+                  <div>
+                    <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EDE9FE] text-[#5B43C6] border border-[#735CDD]/30">
+                          <GraduationCap className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-heading text-sm sm:text-base font-extrabold text-[#1E1938]">
+                              Modul Ajar IPA LENTERA
+                            </span>
+                            <span className="rounded-full bg-[#EDE9FE] px-2 py-0.5 text-[10px] font-bold text-[#5B43C6] border border-[#735CDD]/25">
+                              65 Halaman
+                            </span>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500">
+                            modul-ajar-lentera.pdf • 864 KB
+                          </div>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                        Kurikulum Merdeka
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-xs leading-relaxed text-[#463E66]">
+                      Perangkat ajar lengkap <strong>Praktikum IPA Rangkaian Listrik Sederhana</strong> (6 Pertemuan × 2 JP): memuat Capaian Pembelajaran (Fase E–F), Panduan Guru & Tingkat Bantuan (<code className="font-mono font-bold">I0–I3</code>), Bahan Belajar Siswa, <strong>6 Skenario Pertemuan</strong>, <strong>6 Lembar Kerja Peserta Didik (LKPD)</strong>, Rubrik Asesmen, Protokol Sokratik AI Tutor, serta Lampiran Kamus Istilah.
+                    </p>
+
+                    <div className="mt-3.5 flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-600">
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">6 Skenario Pertemuan</span>
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">6 LKPD Aksesibel</span>
+                      <span className="rounded-lg bg-slate-100 px-2.5 py-1">Rubrik, Kunci & Lampiran</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <a
+                      href="/docs/modul-ajar-lentera.pdf"
+                      download="Modul-Ajar-LENTERA.pdf"
+                      onClick={() => handleDownloadClick("Modul Ajar IPA LENTERA")}
+                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7862E2] to-[#5B43C6] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm shadow-[#735CDD]/25 transition hover:from-[#6B53DE] hover:to-[#4D35B8]"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Unduh Modul Ajar</span>
+                    </a>
+
+                    <button
+                      onClick={() =>
+                        setActivePdfPreview(activePdfPreview === "modul" ? null : "modul")
+                      }
+                      className="flex items-center justify-center gap-1.5 rounded-xl border border-[#735CDD]/30 bg-[#FAF8FF] px-4 py-2.5 text-xs font-bold text-[#5B43C6] hover:bg-[#EDE9FE] transition"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>
+                        {activePdfPreview === "modul" ? "Tutup Pratinjau PDF" : "Baca Langsung di Sini"}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {downloadSuccess && (
+                <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-800 border border-emerald-200 animate-fadeIn">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>Unduhan {downloadSuccess} dimulai! File PDF sedang disimpan ke perangkat Anda.</span>
+                </div>
+              )}
+
+              {/* Inline PDF Reader View (if active) */}
+              {activePdfPreview && (
+                <div className="mt-6 rounded-2xl border-2 border-[#735CDD]/30 bg-white p-4 shadow-md animate-fadeIn">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-[#735CDD]" />
+                      <span className="font-heading text-xs sm:text-sm font-extrabold text-[#1E1938]">
+                        Pratinjau Dokumen:{" "}
+                        {activePdfPreview === "panduan"
+                          ? "Buku Panduan LENTERA (16 Halaman)"
+                          : "Modul Ajar IPA LENTERA (65 Halaman)"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={
+                          activePdfPreview === "panduan"
+                            ? "/docs/buku-panduan-lentera.pdf"
+                            : "/docs/modul-ajar-lentera.pdf"
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-lg bg-[#EDE9FE] px-2.5 py-1 text-[11px] font-bold text-[#5B43C6] hover:bg-[#DDD6FE]"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Buka Layar Penuh</span>
+                      </a>
+                      <button
+                        onClick={() => setActivePdfPreview(null)}
+                        className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-200"
+                      >
+                        Tutup
+                      </button>
+                    </div>
+                  </div>
+                  <iframe
+                    src={
+                      activePdfPreview === "panduan"
+                        ? "/docs/buku-panduan-lentera.pdf"
+                        : "/docs/modul-ajar-lentera.pdf"
+                    }
+                    title={
+                      activePdfPreview === "panduan"
+                        ? "Buku Panduan LENTERA"
+                        : "Modul Ajar LENTERA"
+                    }
+                    className="h-[640px] w-full rounded-xl border border-slate-200 bg-slate-50"
+                  />
+                </div>
+              )}
+
+              {/* Collapsible Syllabus & Guidebook Chapters Preview */}
+              {showSyllabus && (
+                <div className="mt-6 space-y-6 border-t border-[#735CDD]/15 pt-6 animate-fadeIn">
+                  <div>
+                    <h3 className="font-heading text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#B45309] mb-3">
+                      Daftar Isi Buku Panduan Pengoperasian Alat (11 Bab)
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {GUIDEBOOK_CHAPTERS.map((ch) => (
+                        <div
+                          key={ch.num}
+                          className="rounded-2xl border border-amber-200/80 bg-white p-4 shadow-2xs hover:border-[#F5B841] transition"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-black text-[#B45309]">
+                              BAB {ch.num}
+                            </span>
+                            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                              {ch.badge}
+                            </span>
+                          </div>
+                          <div className="mt-2 text-xs font-bold text-[#1E1938]">
+                            {ch.title}
+                          </div>
+                          <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                            {ch.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-heading text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#735CDD] mb-3">
+                      Skenario 6 Pertemuan & LKPD Modul Ajar IPA (Bagian A–I & Lampiran 1–5)
+                    </h3>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {SYLLABUS_CHAPTERS.map((ch) => (
+                        <div
+                          key={ch.num}
+                          className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs hover:border-[#735CDD]/40 transition"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-black text-[#735CDD]">
+                              {ch.num}
+                            </span>
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                              {ch.badge}
+                            </span>
+                          </div>
+                          <div className="mt-2 text-xs font-bold text-[#1E1938]">
+                            {ch.title}
+                          </div>
+                          <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                            {ch.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
