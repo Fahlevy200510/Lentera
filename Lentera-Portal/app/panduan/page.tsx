@@ -853,7 +853,6 @@ export default function PanduanPage() {
   const [selectedCell, setSelectedCell] = useState<string>("A1");
   const [speaking, setSpeaking] = useState<boolean>(false);
   const [showSyllabus, setShowSyllabus] = useState<boolean>(false);
-  const [activePdfPreview, setActivePdfPreview] = useState<"panduan" | "modul" | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   const feature = FEATURES.find((f) => f.key === activeFeature) || FEATURES[0];
@@ -1180,28 +1179,16 @@ export default function PanduanPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="mt-5">
                     <a
                       href="/docs/buku-panduan-lentera.pdf"
                       download="Buku-Panduan-LENTERA.pdf"
                       onClick={() => handleDownloadClick("Buku Panduan LENTERA")}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:from-[#B45309] hover:to-[#92400E]"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] px-4 py-3 text-xs sm:text-sm font-extrabold text-white shadow-sm transition hover:from-[#B45309] hover:to-[#92400E]"
                     >
                       <Download className="h-4 w-4" />
-                      <span>Unduh Buku Panduan</span>
+                      <span>Unduh Buku Panduan (PDF)</span>
                     </a>
-
-                    <button
-                      onClick={() =>
-                        setActivePdfPreview(activePdfPreview === "panduan" ? null : "panduan")
-                      }
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-[#FFF9EE] px-4 py-2.5 text-xs font-bold text-[#92400E] hover:bg-[#FFF3D6] transition"
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>
-                        {activePdfPreview === "panduan" ? "Tutup Pratinjau PDF" : "Baca Langsung di Sini"}
-                      </span>
-                    </button>
                   </div>
                 </div>
 
@@ -1243,28 +1230,16 @@ export default function PanduanPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="mt-5">
                     <a
                       href="/docs/modul-ajar-lentera.pdf"
                       download="Modul-Ajar-LENTERA.pdf"
                       onClick={() => handleDownloadClick("Modul Ajar IPA LENTERA")}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7862E2] to-[#5B43C6] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm shadow-[#735CDD]/25 transition hover:from-[#6B53DE] hover:to-[#4D35B8]"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7862E2] to-[#5B43C6] px-4 py-3 text-xs sm:text-sm font-extrabold text-white shadow-sm shadow-[#735CDD]/25 transition hover:from-[#6B53DE] hover:to-[#4D35B8]"
                     >
                       <Download className="h-4 w-4" />
-                      <span>Unduh Modul Ajar</span>
+                      <span>Unduh Modul Ajar (PDF)</span>
                     </a>
-
-                    <button
-                      onClick={() =>
-                        setActivePdfPreview(activePdfPreview === "modul" ? null : "modul")
-                      }
-                      className="flex items-center justify-center gap-1.5 rounded-xl border border-[#735CDD]/30 bg-[#FAF8FF] px-4 py-2.5 text-xs font-bold text-[#5B43C6] hover:bg-[#EDE9FE] transition"
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>
-                        {activePdfPreview === "modul" ? "Tutup Pratinjau PDF" : "Baca Langsung di Sini"}
-                      </span>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1273,57 +1248,6 @@ export default function PanduanPage() {
                 <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-bold text-emerald-800 border border-emerald-200 animate-fadeIn">
                   <Check className="h-4 w-4 shrink-0 text-emerald-600" />
                   <span>Unduhan {downloadSuccess} dimulai! File PDF sedang disimpan ke perangkat Anda.</span>
-                </div>
-              )}
-
-              {/* Inline PDF Reader View (if active) */}
-              {activePdfPreview && (
-                <div className="mt-6 rounded-2xl border-2 border-[#735CDD]/30 bg-white p-4 shadow-md animate-fadeIn">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-[#735CDD]" />
-                      <span className="font-heading text-xs sm:text-sm font-extrabold text-[#1E1938]">
-                        Pratinjau Dokumen:{" "}
-                        {activePdfPreview === "panduan"
-                          ? "Buku Panduan LENTERA (16 Halaman)"
-                          : "Modul Ajar IPA LENTERA (65 Halaman)"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={
-                          activePdfPreview === "panduan"
-                            ? "/docs/buku-panduan-lentera.pdf"
-                            : "/docs/modul-ajar-lentera.pdf"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-lg bg-[#EDE9FE] px-2.5 py-1 text-[11px] font-bold text-[#5B43C6] hover:bg-[#DDD6FE]"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        <span>Buka Layar Penuh</span>
-                      </a>
-                      <button
-                        onClick={() => setActivePdfPreview(null)}
-                        className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-200"
-                      >
-                        Tutup
-                      </button>
-                    </div>
-                  </div>
-                  <iframe
-                    src={
-                      activePdfPreview === "panduan"
-                        ? "/docs/buku-panduan-lentera.pdf"
-                        : "/docs/modul-ajar-lentera.pdf"
-                    }
-                    title={
-                      activePdfPreview === "panduan"
-                        ? "Buku Panduan LENTERA"
-                        : "Modul Ajar LENTERA"
-                    }
-                    className="h-[640px] w-full rounded-xl border border-slate-200 bg-slate-50"
-                  />
                 </div>
               )}
 
