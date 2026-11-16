@@ -531,7 +531,7 @@ Konsekuensinya: guru tinggal menyambungkan laptop/HP ke WiFi LENTERA sendiri, da
 
 Karena unit produksi kemungkinan tidak akan disambungkan ke monitor/keyboard sehari-hari, andalkan:
 - `journalctl -u lentera.service` — log otomatis dari systemd (termasuk rotasi log bawaan), bisa ditarik lewat SSH kapan saja saat troubleshooting.
-- Pertimbangkan menulis event kritis (gagal kalibrasi, kamera tidak terdeteksi, dst) ke file log terpisah yang persisten, supaya guru/teknisi bisa melaporkan masalah dengan detail jelas tanpa harus mereproduksi masalahnya secara langsung.
+- Pertimbangkan menulis event kritis (gagal kalibrasi, kamera tidak terdeteksi, dst) ke file log terpisah yang persisten, supaya guru/teknisi bisa melaporkan masalah dengan detail jelas tanpa harus mereproduksi masalahnya secara langsung.l
 
 ---
 

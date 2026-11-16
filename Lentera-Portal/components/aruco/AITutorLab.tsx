@@ -28,7 +28,7 @@ interface Msg {
 
 const LAB_QUICK_CHIPS = [
   "Kenapa lampu belum menyala?",
-  "Bagaimana cara kerja saklar geser?",
+  "Bagaimana cara kerja balok saklar?",
   "Apakah polaritas baterai sudah benar?",
   "Apa bedanya rangkaian seri dan paralel?",
 ];
@@ -637,10 +637,14 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           </span>
         </div>
         <span className="font-mono font-extrabold text-[#5840BA] uppercase">
-          {circuitTelemetry.status === "closed"
+          {circuitTelemetry.status === "success" || circuitTelemetry.status === "closed"
             ? "Rangkaian Tertutup (Menyala)"
-            : circuitTelemetry.status === "short"
+            : circuitTelemetry.status === "short_circuit" || circuitTelemetry.status === "short"
             ? "Korsleting!"
+            : circuitTelemetry.status === "polarity_reversed"
+            ? "Polaritas Lampu Terbalik"
+            : circuitTelemetry.status === "switch_off"
+            ? "Saklar Masih OFF"
             : "Rangkaian Terbuka"}
         </span>
       </div>

@@ -13,14 +13,25 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SYSTEM_PROMPT = `Kamu adalah LENTERA AI ASSISTANT — tutor lab sains yang adaptif dan inklusif untuk siswa tunanetra dan low vision, dikembangkan untuk LIDM 2026.
 
+KONTEKS PERANGKAT KERAS PAPAN TAKTIL LENTERA (WAJIB DIPATUHI):
+1. Papan Taktil 5×5 (A1–E5): Kolom A sampai E (kiri ke kanan) dan Baris 1 sampai 5 (Baris 1 paling dekat dengan tubuh siswa, Baris 5 paling jauh di depan siswa, C3 adalah titik tengah papan).
+2. Balok Pasif Tanpa Listrik Nyata (Zero Electrical Hazard): Seluruh balok komponen dicetak 3D (PLA) dengan penanda ArUco di bagian bawah dan simbol timbul di bagian atas. Balok TIDAK dialiri arus listrik nyata dan TIDAK PERNAH menjadi hangat/panas. JANGAN PERNAH menyuruh siswa meraba apakah lampu terasa hangat. Status menyala/mati disampaikan melalui suara narator dan efek audio.
+3. Enam Komponen Taktil & Cara Operasinya:
+   - Baterai (battery): simbol timbul garis pendek tebal untuk kutub negatif (-) dan tanda tambah (+) untuk kutub positif.
+   - Saklar (switch): simbol lingkaran di tengah dengan dua garis pendek di kiri-kanannya. Saklar BUKAN saklar geser/tekan, melainkan dioperasikan ke posisi ON atau OFF dengan MEMUTAR BALOK SAKLAR 90 DERAJAT di dalam kotaknya.
+   - Lampu (lamp): simbol lingkaran berongga di bagian tengah sebagai beban listrik. Jika polaritasnya terbalik (polarity_reversed), siswa cukup mengangkat dan memutar balok lampu 180 derajat.
+   - Kabel Lurus (straight_cable): satu garis lurus memanjang di tengah.
+   - Kabel Belok / L (l_cable): garis timbul berbelok 90 derajat membentuk sudut siku-siku.
+   - Kabel Simpang Tiga / T (t_cable): garis lurus dengan satu cabang di tengah membentuk huruf T untuk membagi arus pada rangkaian paralel.
+
 PERAN & PRINSIP PEDAGOGIS:
 1. "Jelaskan Sebelum Menjawab": Jangan pernah memberi jawaban instan atau langsung memperbaiki rangkaian. Ajukan pertanyaan reflektif dan bimbing siswa langkah demi langkah.
-2. Kosakata Taktil: JANGAN PERNAH memakai instruksi visual seperti "lihat gambar" atau "perhatikan warna kabel". Gunakan bahasa taktil dan spasial seperti "raba", "rasakan", "telusuri jalurnya", "sisi kiri/kanan", "tekstur timbul/cekung", dan "geser tuas saklar ke ON/OFF".
+2. Kosakata Taktil: JANGAN PERNAH memakai instruksi visual seperti "lihat gambar" atau "perhatikan warna kabel". Gunakan bahasa taktil dan spasial seperti "raba", "rasakan", "telusuri jalurnya", "sisi kiri/kanan", "tekstur timbul", dan "putar balok saklar 90 derajat ke posisi ON/OFF".
 3. Bahasa: Selalu jawab dalam Bahasa Indonesia yang hangat, suportif, inklusif, dan ringkas (2–4 kalimat) yang nyaman untuk pembaca layar dan text-to-speech.
 4. Mode Interaksi:
    - Mode Eksplorasi: Mengenal komponen dan analogi taktil untuk aliran listrik.
-   - Mode Pemecahan Masalah: Menelusuri kesalahan rangkaian secara sistematis menggunakan data sensor.
-   - Refleksi Konsep: Merenungkan mengapa suatu fenomena terjadi.
+   - Mode Pemecahan Masalah: Menelusuri kesalahan rangkaian secara sistematis menggunakan data sensor koordinat papan A1–E5.
+   - Refleksi Konsep: Merenungkan mengapa suatu fenomena terjadi secara taktil dan logis.
    - Mode Evaluasi: Memberi pertanyaan taktil formatif untuk mengecek pemahaman mandiri.`;
 
 interface ChatTurn {
@@ -41,6 +52,13 @@ function normalizeCircuit(cs: any): { lampReversed: boolean; switchOpen: boolean
   return { lampReversed, switchOpen, pathOpen, allGood };
 }
 
+function findComponentCells(cs: any, compName: string): string[] {
+  if (!cs?.cells || typeof cs.cells !== "object") return [];
+  return Object.entries(cs.cells)
+    .filter(([_, val]: [string, any]) => val && val.component === compName)
+    .map(([pos]) => pos);
+}
+
 // Intelligent Offline Fallback Engine
 function generateCLEFallbackResponse(
   message: string,
@@ -49,6 +67,8 @@ function generateCLEFallbackResponse(
 ): { text: string; note: string } {
   const m = message.toLowerCase();
   const cs = normalizeCircuit(circuitState);
+  const switchCells = findComponentCells(circuitState, "switch");
+  const lampCells = findComponentCells(circuitState, "lamp");
 
   // Kata kunci Indonesia + Inggris agar tetap kompatibel
   const isSeriesParallel = /seri|paralel|parallel/.test(m);
@@ -61,7 +81,7 @@ function generateCLEFallbackResponse(
       };
     }
     return {
-      text: "Di rumah, ajak siswa menjelajahi benda listrik dengan aman, misalnya saklar lampu dinding, lalu tanyakan apa yang mereka rasakan saat tuasnya ditekan. Beri waktu untuk menjawab sebelum menjelaskan agar rasa ingin tahunya tumbuh.",
+      text: "Di rumah, ajak siswa menjelajahi benda listrik dengan aman, misalnya meraba alur kabel atau saklar di papan Lentera, lalu tanyakan bagaimana rasanya saat saklar diputar untuk menyambung jalur. Beri waktu untuk menjawab sebelum menjelaskan agar rasa ingin tahunya tumbuh.",
       note: "Panduan Orang Tua: Aktivitas Taktil di Rumah",
     };
   }
@@ -74,32 +94,34 @@ function generateCLEFallbackResponse(
 
   if (cs && wantsDiagnosis && (cs.lampReversed || cs.switchOpen || cs.pathOpen)) {
     if (cs.lampReversed) {
+      const lampLoc = lampCells.length > 0 ? ` di kotak ${lampCells.join(" atau ")}` : "";
       return {
-        text: "Kutub polaritas lampu LED di rangkaianmu terbalik sehingga lampu belum menyala. Raba balok lampu tersebut, lalu angkat dan putar posisinya 180 derajat agar kutub bertanda plus menghadap ke arah kutub positif baterai.",
+        text: `Kutub polaritas lampu LED${lampLoc} di rangkaianmu terbalik sehingga lampu belum menyala. Raba balok lampu tersebut, lalu angkat dan putar posisinya 180 derajat agar kutub bertanda plus menghadap ke arah kutub positif baterai.`,
         note: "Diagnosis CLE: Polaritas lampu terbalik",
       };
     }
     if (cs.switchOpen) {
+      const switchLoc = switchCells.length > 0 ? ` di kotak ${switchCells.join(" atau ")}` : " di papanmu";
       return {
-        text: "Sentuh saklar geser di petak A2 di sisi kanan papanmu. Apakah tuas gesernya masih di posisi terbuka atau OFF, atau sudah kamu geser ke posisi ON?",
+        text: `Raba balok saklar${switchLoc} yang memiliki simbol lingkaran di tengah dengan dua garis pendek di kiri-kanannya. Apakah posisinya masih terbuka atau OFF? Coba angkat dan putar balok saklar tersebut 90 derajat di tempatnya agar jalur arus tersambung ke posisi ON.`,
         note: "Diagnosis CLE: Saklar terbuka (Rangkaian Terbuka)",
       };
     }
     return {
-      text: "Ayo kita selidiki bersama. Telusuri kabel taktil dari kutub positif baterai dengan ujung jarimu. Adakah jalur yang terasa terputus atau longgar sebelum sampai ke lampu?",
+      text: "Ayo kita selidiki bersama. Telusuri balok kabel taktil dari kutub positif baterai dengan ujung jarimu dari kotak ke kotak. Adakah jalur yang masih kosong atau arah garis timbulnya belum menghadap ke komponen di sebelahnya?",
       note: "Diagnosis CLE: Jalur rangkaian terbuka",
     };
   }
   if (cs && !mentionsFault && wantsDiagnosis && cs.allGood && (mode === "troubleshooting" || /benar|selesai|nyala|menyala|berhasil|cek|periksa|correct|done|lit|working|check/.test(m))) {
     return {
-      text: "Hebat, jalur dari baterai melalui saklar ke lampu sudah tersambung dengan polaritas yang benar. Sekarang tantangannya: jika kamu menambah satu lampu lagi secara seri, menurutmu lampu pertama akan terasa lebih terang atau lebih redup?",
+      text: "Hebat, jalur dari baterai melalui saklar ke lampu sudah tersambung dengan polaritas yang benar. Sekarang tantangannya: jika kamu menambah satu lampu lagi secara seri, menurutmu bagaimana pembagian energi listrik pada kedua lampu tersebut?",
       note: "CLE: Rangkaian berhasil tertutup",
     };
   }
 
   if (mode === "troubleshooting" || mentionsFault) {
     return {
-      text: "Ayo kita selidiki bersama. Pertama, telusuri kabel taktil dari kutub positif baterai dengan ujung jarimu. Adakah jalur yang terasa terputus atau longgar sebelum sampai ke lampu?",
+      text: "Ayo kita selidiki bersama. Pertama, telusuri balok kabel taktil dari kutub positif baterai dengan ujung jarimu. Adakah jalur yang terasa terputus atau arah garis timbulnya belum bertemu sebelum sampai ke lampu?",
       note: "Diagnosis CLE: Penelusuran jalur taktil mandiri",
     };
   }
@@ -107,46 +129,53 @@ function generateCLEFallbackResponse(
   if (mode === "reflection" || /kenapa|mengapa|konsep|beda|why|concept|difference/.test(m) || isSeriesParallel) {
     if (isSeriesParallel) {
       return {
-        text: "Bayangkan rangkaian seri seperti satu lorong sekolah di mana semua orang harus berjalan berurutan, jadi jika satu orang berhenti, semua ikut tertahan. Rangkaian paralel seperti memiliki dua lorong terpisah. Jika satu lampu dilepas dari rangkaian paralel, menurutmu apa yang akan kamu rasakan pada lampu lainnya?",
+        text: "Bayangkan rangkaian seri seperti satu lorong sekolah di mana semua orang harus berjalan berurutan, jadi jika satu orang berhenti, semua ikut tertahan. Rangkaian paralel seperti memiliki dua lorong bercabang yang terpisah. Jika satu lampu dilepas dari rangkaian paralel, menurutmu apakah arus masih bisa lewat ke cabang lampu lainnya?",
         note: "Refleksi Konsep: Analogi Jalur Taktil",
       };
     }
     return {
-      text: "Itu pertanyaan yang bagus untuk direnungkan! Saat arus listrik melewati filamen lampu, energi listrik berubah menjadi panas dan cahaya. Raba permukaan bohlam setelah menyala beberapa saat, apakah terasa hangat?",
-      note: "Refleksi Konsep: Perubahan Energi Listrik",
+      text: "Itu pertanyaan yang bagus untuk direnungkan! Arus listrik hanya bisa mengalir jika ada jalur tertutup tanpa putus dari kutub positif baterai, melewati beban lampu, lalu kembali ke kutub negatif baterai. Coba telusuri rangkaian di papanmu dengan jari: apakah jalurnya sudah membentuk satu putaran penuh?",
+      note: "Refleksi Konsep: Loop Rangkaian Tertutup",
     };
   }
 
   if (mode === "evaluation" || /kuis|tes|evaluasi|pertanyaan|quiz|test|evaluation|question/.test(m)) {
     return {
-      text: "Tantangan Kuis Taktil: Kamu punya 1 baterai dan 2 lampu yang disusun berurutan dalam satu kabel tanpa cabang. Jika saklar ditekan, apakah ini rangkaian seri atau paralel? Jawab berdasarkan jalur yang bisa kamu telusuri dengan rabaan.",
+      text: "Tantangan Kuis Taktil: Kamu punya 1 baterai dan 2 lampu yang disusun berurutan dalam satu jalur kabel tanpa cabang. Jika balok saklar diputar 90 derajat ke posisi ON, apakah ini rangkaian seri atau paralel? Jawab berdasarkan jalur yang bisa kamu telusuri dengan rabaan.",
       note: "Evaluasi Formatif: Memahami Rangkaian Seri",
     };
   }
 
   if (/baterai|battery/.test(m)) {
     return {
-      text: "Baterai adalah sumber energi listrik kita. Raba kedua ujungnya: kamu akan merasakan simbol timbul tanda plus untuk kutub positif, dan simbol timbul tanda minus untuk kutub negatif. Keduanya memiliki tekstur timbul agar mudah dibedakan dengan jari. Arus mengalir keluar dari kutub positif.",
+      text: "Baterai adalah sumber energi listrik kita. Raba bagian atas baloknya: kamu akan merasakan simbol timbul tanda tambah (+) untuk kutub positif, dan satu garis pendek tebal (-) untuk kutub negatif. Arus listrik mengalir keluar dari kutub positif menuju rangkaian.",
       note: "Eksplorasi Taktil: Mengenali Polaritas Baterai",
     };
   }
 
   if (/saklar|sakelar|switch/.test(m)) {
     return {
-      text: "Saklar bekerja seperti jembatan angkat. Saat kamu menekan tuasnya ke bawah, jembatan tertutup dan arus bisa lewat. Saat kamu mengangkatnya, jalur terbuka dan arus berhenti.",
-      note: "Eksplorasi Taktil: Cara Kerja Saklar",
+      text: "Balok saklar memiliki simbol timbul lingkaran di tengah dengan dua garis pendek di kiri dan kanannya. Saklar bekerja seperti jembatan pemutus dan penyambung: cukup putar balok saklar 90 derajat di dalam kotaknya untuk mengubah status antara menyala (ON) dan mati (OFF).",
+      note: "Eksplorasi Taktil: Cara Kerja Balok Saklar",
     };
   }
 
   if (/lampu|cahaya|lamp|light/.test(m)) {
     return {
-      text: "Lampu adalah beban yang mengubah energi listrik. Komponen lampu di papan kita memiliki penanda taktil timbul di sisinya untuk membantumu menyesuaikan arah arus dengan benar.",
+      text: "Balok lampu memiliki simbol lingkaran berongga di bagian tengah sebagai beban listrik yang mengubah energi listrik menjadi cahaya. Jika rangkaian sudah tertutup tetapi lampu belum menyala karena kutubnya terbalik, putar balok lampu 180 derajat.",
       note: "Eksplorasi Taktil: Mengenali Beban Lampu",
     };
   }
 
+  if (/kabel|cable|lurus|belok|cabang|simpang/.test(m)) {
+    return {
+      text: "Di papan Lentera ada tiga jenis balok kabel taktil: Kabel Lurus dengan satu garis lurus di tengah, Kabel L dengan garis berbelok 90 derajat untuk sudut papan, serta Kabel Simpang Tiga berbentuk huruf T untuk membagi arus pada rangkaian paralel.",
+      note: "Eksplorasi Taktil: Tiga Jenis Balok Kabel",
+    };
+  }
+
   return {
-    text: "Halo! Aku LENTERA AI Assistant. Aku siap menemani lab sainsmu hari ini. Kamu bisa meraba komponen di papan taktilmu atau bertanya tentang konsep rangkaian listrik yang ingin kamu jelajahi.",
+    text: "Halo! Aku LENTERA AI Assistant. Aku siap menemani lab sainsmu hari ini. Kamu bisa meraba balok komponen di papan taktil 5 kali 5 milikmu atau bertanya tentang konsep rangkaian listrik yang ingin kamu jelajahi.",
     note: "Dukungan Belajar Inklusif Aktif",
   };
 }
@@ -197,12 +226,20 @@ export async function POST(req: NextRequest) {
     // If Groq API key is provided, use LLaMA 3.3 70B
     let diagnosisRule = "";
     const sensorStatus = String(circuitState?.status || "");
+    const switchCells = findComponentCells(circuitState, "switch");
+    const lampCells = findComponentCells(circuitState, "lamp");
     if (sensorStatus === "polarity_reversed") {
-      diagnosisRule = "\n\nATURAN MUTLAK DIAGNOSIS SENSOR: Status sirkuit terdeteksi polarity_reversed (kutub polaritas lampu LED terbalik). Jalur sirkuit SUDAH TERSAMBUNG DAN LOOP SUDAH TERTUTUP! JANGAN PERNAH menyuruh menghubungkan kabel lagi, JANGAN menyuruh memasang kabel di C3! Beritahu siswa dengan jelas bahwa rangkaiannya sudah terhubung, tetapi kutub lampu LED terbalik. Bimbing siswa untuk meraba balok lampu tersebut, lalu memutar posisinya 180 derajat agar kutub bertanda plus (+) menghadap ke arah kutub positif baterai.";
+      const lampLoc = lampCells.length > 0 ? ` di kotak ${lampCells.join(", ")}` : "";
+      diagnosisRule = `\n\nATURAN MUTLAK DIAGNOSIS SENSOR: Status sirkuit terdeteksi polarity_reversed (kutub polaritas lampu LED${lampLoc} terbalik). Jalur sirkuit SUDAH TERSAMBUNG DAN LOOP SUDAH TERTUTUP! JANGAN PERNAH menyuruh menghubungkan kabel lagi, JANGAN menyuruh memasang kabel di C3! Beritahu siswa dengan jelas bahwa rangkaiannya sudah terhubung, tetapi kutub lampu LED${lampLoc} terbalik. Bimbing siswa untuk meraba balok lampu tersebut, lalu memutar posisinya 180 derajat agar kutub bertanda plus (+) menghadap ke arah kutub positif baterai.`;
     } else if (sensorStatus === "switch_off") {
-      diagnosisRule = "\n\nATURAN MUTLAK DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi saklar masih terbuka atau OFF. Bimbing siswa untuk meraba balok saklar dan memutar tuasnya 90 derajat ke posisi ON agar arus mengalir.";
+      const switchLoc = switchCells.length > 0 ? ` di kotak ${switchCells.join(", ")}` : "";
+      diagnosisRule = `\n\nATURAN MUTLAK DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar${switchLoc} masih terbuka atau OFF. Bimbing siswa untuk meraba balok saklar${switchLoc} (simbol lingkaran dengan dua garis pendek di sampingnya) lalu MEMUTAR BALOK SAKLAR 90 DERAJAT di dalam kotaknya ke posisi ON agar arus mengalir.`;
     } else if (sensorStatus === "short_circuit") {
-      diagnosisRule = "\n\nPERINGATAN BAHAYA SENSOR: Terjadi korsleting arus pendek tanpa beban! Bimbing siswa segera melepaskan kabel atau memasang lampu.";
+      diagnosisRule = "\n\nPERINGATAN BAHAYA SENSOR: Terjadi korsleting arus pendek tanpa beban lampu! Bimbing siswa segera melepaskan salah satu kabel atau memasang balok lampu sebagai beban.";
+    } else if (sensorStatus === "no_battery") {
+      diagnosisRule = "\n\nDIAGNOSIS SENSOR: Belum ada balok baterai yang terdeteksi di papan. Bimbing siswa mencari balok baterai (simbol garis pendek tebal minus dan tanda tambah plus) untuk dipasang sebagai sumber arus.";
+    } else if (sensorStatus === "no_lamp") {
+      diagnosisRule = "\n\nDIAGNOSIS SENSOR: Belum ada balok lampu yang terdeteksi di papan. Bimbing siswa mencari balok lampu (simbol lingkaran berongga di tengah) untuk dipasang sebagai beban listrik.";
     } else if (sensorStatus === "success") {
       diagnosisRule = "\n\nSTATUS SENSOR: Rangkaian berhasil menyala sempurna! Berikan pujian hangat atas ketelitian taktil siswa.";
     }

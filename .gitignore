@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 .venv/
 venv/
 env/
@@ -18,6 +19,7 @@ dist-ssr/
 
 # Scratch & temporary
 scratch_birela/
+graphify-out/
 .env*.local
 
 # Local hardware calibration (immune to git pull)

@@ -912,7 +912,7 @@ export default function VoiceGuide() {
         if (status === "polarity_reversed") {
           promptMessage += ` PERINGATAN SENSOR: Polaritas lampu LED terbalik (polarity_reversed). Seluruh lintasan sirkuit baterai dan kabel SEBENARNYA SUDAH TERSAMBUNG DAN TERTUTUP! Hanya kutub lampu LED yang terbalik. Bimbing siswa untuk meraba balok lampu tersebut, lalu memutar posisinya 180 derajat. JANGAN menyuruh menyambung kabel lagi!`;
         } else if (status === "switch_off") {
-          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi saklar masih terbuka atau OFF. Bimbing siswa untuk memutar tuas saklar 90 derajat ke posisi ON.`;
+          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar masih terbuka atau OFF. Bimbing siswa untuk meraba balok saklar lalu memutar balok saklar tersebut 90 derajat di tempatnya ke posisi ON.`;
         } else if (status === "short_circuit") {
           promptMessage += ` PERINGATAN BAHAYA: Terjadi korsleting arus pendek tanpa hambatan beban! Bimbing siswa segera melepaskan kabel atau memasang lampu.`;
         } else if (status === "success") {
