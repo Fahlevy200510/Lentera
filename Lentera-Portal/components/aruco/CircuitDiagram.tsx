@@ -469,8 +469,9 @@ export default function CircuitDiagram({ variant = "live" }: { variant?: string 
           effectiveRotation = orient === "vertical" ? 90 : 0;
         }
 
+        // Saklar yang dialiri arus pasti tertutup; selain itu pakai status is_on dari backend
         const switchClosed =
-          component === "switch" ? isSwitchClosedInLoop(cell, cells, variant) : false;
+          component === "switch" ? isCellActive || isSwitchClosedInLoop(cell, cells, variant) : false;
 
         return (
           <g
