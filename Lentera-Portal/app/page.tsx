@@ -437,6 +437,7 @@ export default function PortalHome() {
   const [calibNotice, setCalibNotice] = useState<string | null>(null);
   const [activeEndpoint, setActiveEndpoint] = useState<string>("localhost");
   const [activeConnMode, setActiveConnMode] = useState<"auto" | "manual">("auto");
+  const [customIpInput, setCustomIpInput] = useState<string>("");
   const lastHeartbeatRef = useRef<number>(0);
   const wsInstanceRef = useRef<WebSocket | null>(null);
   const [session, setSession] = useState<{ name: string; role: string } | null>(
@@ -689,6 +690,7 @@ export default function PortalHome() {
 
       const { wsUrl, isTunnel, displayHost } = resolveEndpoints(endpoint);
       setActiveEndpoint(displayHost || endpoint);
+      setCustomIpInput((prev) => prev || displayHost || endpoint);
       console.log("[LENTERA Auto-Redirect WS] Menghubungkan ke:", wsUrl);
 
       try {
@@ -1583,6 +1585,8 @@ export default function PortalHome() {
                       <span className="font-mono font-extrabold text-amber-300 truncate max-w-[230px]">
                         {activeEndpoint === "localhost" || activeEndpoint === "127.0.0.1"
                           ? "Localhost (127.0.0.1)"
+                          : /^\d+\.\d+\.\d+\.\d+$/.test(activeEndpoint)
+                          ? `IP Raspi (${activeEndpoint})`
                           : `Raspi Tunnel (${activeEndpoint})`}
                       </span>
                     </div>
@@ -1618,9 +1622,11 @@ export default function PortalHome() {
                           try {
                             localStorage.setItem("lentera_endpoint_mode", "manual");
                             localStorage.setItem("lentera_edge_endpoint", "localhost");
+                            localStorage.setItem("lentera_endpoint", "localhost");
                           } catch {}
                           setActiveConnMode("manual");
                           setActiveEndpoint("localhost");
+                          setCustomIpInput("localhost");
                           setLivePreviewFrame(null);
                           setCalibNotice("Beralih ke Kamera Lokal Laptop (Localhost)...");
                           setTimeout(() => setCalibNotice(null), 2500);
@@ -1638,6 +1644,41 @@ export default function PortalHome() {
                         Lokal (Localhost)
                       </button>
                     </div>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const targetVal = customIpInput.trim();
+                        if (!targetVal) return;
+                        try {
+                          localStorage.setItem("lentera_endpoint_mode", "manual");
+                          localStorage.setItem("lentera_edge_endpoint", targetVal);
+                          localStorage.setItem("lentera_endpoint", targetVal);
+                        } catch {}
+                        setActiveConnMode("manual");
+                        setActiveEndpoint(targetVal);
+                        setLivePreviewFrame(null);
+                        setCalibNotice(`Menghubungkan ke ${targetVal}...`);
+                        setTimeout(() => setCalibNotice(null), 2500);
+                        try {
+                          wsInstanceRef.current?.close();
+                        } catch {}
+                      }}
+                      className="flex items-center gap-1.5 pt-0.5"
+                    >
+                      <input
+                        type="text"
+                        value={customIpInput}
+                        onChange={(e) => setCustomIpInput(e.target.value)}
+                        placeholder="Ketik IP Raspi (misal: 192.168.43.105)"
+                        className="flex-1 rounded-xl border border-white/20 bg-black/40 px-2.5 py-1.5 text-[11px] font-mono text-white placeholder:text-white/45 focus:border-amber-300 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        className="shrink-0 rounded-xl bg-amber-400 hover:bg-amber-300 px-3 py-1.5 text-[11px] font-extrabold text-slate-950 transition"
+                      >
+                        Hubungkan
+                      </button>
+                    </form>
                   </div>
 
                   <div className="mt-2.5 relative overflow-hidden rounded-2xl border border-white/15 bg-black/60 aspect-[4/3] flex items-center justify-center">
