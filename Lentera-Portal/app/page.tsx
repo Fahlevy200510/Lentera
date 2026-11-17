@@ -88,7 +88,16 @@ const destinations: Destination[] = [
   },
 ];
 
-function LenteraHeroEmblem({ wsConnected }: { wsConnected: boolean }) {
+function LenteraHeroEmblem({
+  wsConnected,
+  cameraReady,
+  onTogglePeek,
+}: {
+  wsConnected: boolean;
+  cameraReady: boolean;
+  onTogglePeek: () => void;
+}) {
+  const isFullyReady = wsConnected && cameraReady;
   return (
     <div className="relative w-full max-w-[500px] mx-auto">
       {/* Soft warm lantern back-glow behind the main card */}
@@ -129,23 +138,44 @@ function LenteraHeroEmblem({ wsConnected }: { wsConnected: boolean }) {
         <div className="relative z-10 flex flex-col items-center">
           {/* Top Header inside Visual Card */}
           <div className="w-full flex items-center justify-between gap-2 pb-4 border-b border-white/15">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-semibold text-white border border-white/20 backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
+            <button
+              id="btn-camera-peek-hero"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePeek();
+              }}
+              title="Klik untuk mengintip tampilan kamera bawah papan secara diam-diam (tanpa suara)"
+              className="inline-flex items-center gap-2 rounded-full bg-white/15 hover:bg-white/25 px-3.5 py-1.5 text-xs font-semibold text-white border border-white/20 backdrop-blur-md transition cursor-pointer active:scale-95"
+            >
+              <span className="relative flex h-2.5 w-2.5">
                 <span
-                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${wsConnected ? "bg-emerald-300" : "bg-[#FFF3D6]"
-                    }`}
+                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                    isFullyReady
+                      ? "bg-emerald-300"
+                      : wsConnected
+                      ? "bg-amber-300"
+                      : "bg-[#FFF3D6]"
+                  }`}
                 />
                 <span
-                  className={`relative inline-flex h-2 w-2 rounded-full ${wsConnected ? "bg-emerald-400" : "bg-[#F5B841]"
-                    }`}
+                  className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+                    isFullyReady
+                      ? "bg-emerald-400"
+                      : wsConnected
+                      ? "bg-amber-400"
+                      : "bg-[#F5B841]"
+                  }`}
                 />
               </span>
               <span>
-                {wsConnected
-                  ? "Terhubung ke Papan Eksperimen"
-                  : "Papan Eksperimen Taktil"}
+                {isFullyReady
+                  ? "Kamera & Papan Siap (Klik Cek)"
+                  : wsConnected
+                  ? "Menunggu Frame Kamera..."
+                  : "Kamera Belum Terhubung"}
               </span>
-            </div>
+            </button>
 
             <span className="rounded-full bg-[#FFF3D6] px-3.5 py-1 text-xs font-extrabold text-[#1E1938] shadow-xs">
               Braille & Suara
@@ -402,6 +432,12 @@ export default function PortalHome() {
   const [open, setOpen] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [livePreviewFrame, setLivePreviewFrame] = useState<string | null>(null);
+  const [showCameraPeek, setShowCameraPeek] = useState(false);
+  const [calibNotice, setCalibNotice] = useState<string | null>(null);
+  const lastHeartbeatRef = useRef<number>(0);
+  const wsInstanceRef = useRef<WebSocket | null>(null);
   const [session, setSession] = useState<{ name: string; role: string } | null>(
     null
   );
@@ -570,7 +606,12 @@ export default function PortalHome() {
       if (hasSpokenOnFirstClickRef.current) return;
 
       const target = e.target as HTMLElement | null;
-      if (target && target.closest("#btn-voice-guide")) {
+      if (
+        target &&
+        (target.closest("#btn-voice-guide") ||
+          target.closest("#btn-camera-peek-hero") ||
+          target.closest("#camera-peek-modal"))
+      ) {
         return;
       }
 
@@ -646,15 +687,18 @@ export default function PortalHome() {
 
       try {
         ws = new WebSocket(wsUrl);
+        wsInstanceRef.current = ws;
         let opened = false;
         ws.onopen = () => {
           opened = true;
           retryAttempt = 0;
+          lastHeartbeatRef.current = Date.now();
           console.log("[LENTERA Auto-Redirect WS] Terhubung ke papan fisik!");
           setWsConnected(true);
         };
         ws.onclose = () => {
           setWsConnected(false);
+          setCameraReady(false);
           if (!opened && isTunnel) {
             markTunnelDead(endpoint);
           }
@@ -662,6 +706,7 @@ export default function PortalHome() {
         };
         ws.onerror = () => {
           setWsConnected(false);
+          setCameraReady(false);
           try {
             ws?.close();
           } catch { }
@@ -798,7 +843,20 @@ export default function PortalHome() {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            if (data.type === "camera_frame" && data.image) {
+              lastHeartbeatRef.current = Date.now();
+              setCameraReady(true);
+              setLivePreviewFrame(data.image);
+              return;
+            }
+            if (data.type === "calibration_result") {
+              setCalibNotice(data.message || (data.success ? "Kalibrasi berhasil!" : "Kalibrasi gagal."));
+              setTimeout(() => setCalibNotice(null), 3500);
+              return;
+            }
             if (data.type === "grid_state" && data.cells && !redirected) {
+              lastHeartbeatRef.current = Date.now();
+              setCameraReady(true);
               const allPlacedCount = Object.values(data.cells).filter(Boolean).length;
               latestPlacedTotal = allPlacedCount;
 
@@ -1112,6 +1170,21 @@ export default function PortalHome() {
 
     initBackgroundWS();
 
+    // Watchdog anti-mati saat alat sudah dinyalakan 30 menit sebelum presentasi:
+    // Pastikan frame/detak kamera benar-benar masuk setiap beberapa detik; jika macet, otomatis reconnect
+    const watchdogTimer = setInterval(() => {
+      if (cancelled || redirected) return;
+      const elapsed = Date.now() - lastHeartbeatRef.current;
+      if (lastHeartbeatRef.current > 0 && elapsed > 5000) {
+        setCameraReady(false);
+      }
+      if (ws && ws.readyState === WebSocket.OPEN && lastHeartbeatRef.current > 0 && elapsed > 12000) {
+        try {
+          ws.close();
+        } catch {}
+      }
+    }, 2500);
+
     const handleTriggerBuzzer = (e: Event) => {
       const customEvent = e as CustomEvent;
       const pattern = customEvent.detail?.pattern || "step";
@@ -1125,6 +1198,7 @@ export default function PortalHome() {
 
     return () => {
       cancelled = true;
+      clearInterval(watchdogTimer);
       window.removeEventListener("lentera-trigger-buzzer", handleTriggerBuzzer);
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (speedTimer) clearTimeout(speedTimer);
@@ -1456,7 +1530,100 @@ export default function PortalHome() {
           style={{ animationDelay: ".12s" }}
         >
           {!speedPrompt?.active ? (
-            <LenteraHeroEmblem wsConnected={wsConnected} />
+            <div className="relative w-full">
+              <LenteraHeroEmblem
+                wsConnected={wsConnected}
+                cameraReady={cameraReady}
+                onTogglePeek={() => setShowCameraPeek((v) => !v)}
+              />
+              {showCameraPeek && (
+                <div
+                  id="camera-peek-modal"
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute inset-x-0 top-14 mx-auto w-[92%] max-w-[440px] z-50 rounded-3xl bg-[#1E1938]/95 border-2 border-white/30 p-4 text-white shadow-2xl backdrop-blur-xl animate-fade-in"
+                >
+                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/15">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          wsConnected && cameraReady
+                            ? "bg-emerald-400 animate-pulse"
+                            : wsConnected
+                            ? "bg-amber-400"
+                            : "bg-rose-400"
+                        }`}
+                      />
+                      <span className="text-xs font-extrabold tracking-wide">
+                        {wsConnected && cameraReady
+                          ? "Kamera Bawah Siap Membaca Blok (Live)"
+                          : wsConnected
+                          ? "WebSocket Terhubung • Menunggu Kamera..."
+                          : "Kamera Belum Terhubung ke Alat"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCameraPeek(false)}
+                      className="rounded-lg bg-white/10 hover:bg-white/20 p-1 text-white/80 hover:text-white transition"
+                      title="Tutup pratinjau kamera"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 relative overflow-hidden rounded-2xl border border-white/15 bg-black/60 aspect-[4/3] flex items-center justify-center">
+                    {livePreviewFrame ? (
+                      <img
+                        src={livePreviewFrame}
+                        alt="Pratinjau Kamera Bawah LENTERA"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-center px-4 py-8 text-xs text-white/70">
+                        {wsConnected
+                          ? "Menunggu stream gambar dari kamera bawah..."
+                          : "Pastikan main.py di alat/laptop sudah menyala."}
+                      </div>
+                    )}
+                  </div>
+
+                  {calibNotice && (
+                    <div className="mt-2 rounded-xl bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 text-[11px] font-bold text-emerald-200 text-center">
+                      {calibNotice}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (wsInstanceRef.current && wsInstanceRef.current.readyState === WebSocket.OPEN) {
+                          wsInstanceRef.current.send(
+                            JSON.stringify({ type: "command", action: "calibrate" })
+                          );
+                          setCalibNotice("Mengirim perintah kalibrasi 4 sudut...");
+                        }
+                      }}
+                      disabled={!wsConnected}
+                      className="flex-1 rounded-xl bg-white/15 hover:bg-white/25 disabled:opacity-40 px-3 py-2 text-[11px] font-extrabold text-white transition"
+                    >
+                      Kalibrasi 4 Sudut
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          wsInstanceRef.current?.close();
+                        } catch {}
+                      }}
+                      className="rounded-xl bg-[#735CDD] hover:bg-[#5E47C9] px-3 py-2 text-[11px] font-extrabold text-white transition"
+                    >
+                      Refresh Koneksi
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="w-full max-w-[500px] mx-auto rounded-[32px] bg-gradient-to-br from-[#735CDD] via-[#5E47C9] to-[#4338CA] p-6 text-white shadow-2xl border-2 border-amber-300/80 animate-fade-in">
               <div className="flex items-center justify-between gap-3">
