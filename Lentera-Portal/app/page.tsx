@@ -22,6 +22,7 @@ import {
   resolveEndpoints,
   getActiveLenteraEndpoint,
   markTunnelDead,
+  clearDeadTunnels,
 } from "@/components/aruco/ArUcoDetector";
 import StudentProfileSwitcher from "@/components/StudentProfileSwitcher";
 import SpeechSpeedSelector from "@/components/SpeechSpeedSelector";
@@ -150,30 +151,28 @@ function LenteraHeroEmblem({
             >
               <span className="relative flex h-2.5 w-2.5">
                 <span
-                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                    isFullyReady
+                  className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${isFullyReady
                       ? "bg-emerald-300"
                       : wsConnected
-                      ? "bg-amber-300"
-                      : "bg-[#FFF3D6]"
-                  }`}
+                        ? "bg-amber-300"
+                        : "bg-[#FFF3D6]"
+                    }`}
                 />
                 <span
-                  className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
-                    isFullyReady
+                  className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isFullyReady
                       ? "bg-emerald-400"
                       : wsConnected
-                      ? "bg-amber-400"
-                      : "bg-[#F5B841]"
-                  }`}
+                        ? "bg-amber-400"
+                        : "bg-[#F5B841]"
+                    }`}
                 />
               </span>
               <span>
                 {isFullyReady
                   ? "Kamera & Papan Siap (Klik Cek)"
                   : wsConnected
-                  ? "Menunggu Frame Kamera..."
-                  : "Kamera Belum Terhubung"}
+                    ? "Menunggu Frame Kamera..."
+                    : "Kamera Belum Terhubung"}
               </span>
             </button>
 
@@ -436,6 +435,8 @@ export default function PortalHome() {
   const [livePreviewFrame, setLivePreviewFrame] = useState<string | null>(null);
   const [showCameraPeek, setShowCameraPeek] = useState(false);
   const [calibNotice, setCalibNotice] = useState<string | null>(null);
+  const [activeEndpoint, setActiveEndpoint] = useState<string>("localhost");
+  const [activeConnMode, setActiveConnMode] = useState<"auto" | "manual">("auto");
   const lastHeartbeatRef = useRef<number>(0);
   const wsInstanceRef = useRef<WebSocket | null>(null);
   const [session, setSession] = useState<{ name: string; role: string } | null>(
@@ -679,10 +680,15 @@ export default function PortalHome() {
     };
 
     async function initBackgroundWS() {
+      try {
+        const savedMode = localStorage.getItem("lentera_endpoint_mode");
+        setActiveConnMode(savedMode === "manual" ? "manual" : "auto");
+      } catch {}
       const endpoint = await getActiveLenteraEndpoint();
       if (cancelled || redirected) return;
 
-      const { wsUrl, isTunnel } = resolveEndpoints(endpoint);
+      const { wsUrl, isTunnel, displayHost } = resolveEndpoints(endpoint);
+      setActiveEndpoint(displayHost || endpoint);
       console.log("[LENTERA Auto-Redirect WS] Menghubungkan ke:", wsUrl);
 
       try {
@@ -1028,10 +1034,10 @@ export default function PortalHome() {
               const placed = Object.entries(data.cells)
                 .filter(([cellName, val]) => Boolean(val) && !(initialSnapshotCells && initialSnapshotCells[cellName]))
                 .map(([, val]) => val) as Array<{
-                component: string;
-                rotation: number;
-                id?: number;
-              }>;
+                  component: string;
+                  rotation: number;
+                  id?: number;
+                }>;
 
               if (detectedUserMeta || placed.length > 0) {
                 playEarcon("step");
@@ -1181,7 +1187,7 @@ export default function PortalHome() {
       if (ws && ws.readyState === WebSocket.OPEN && lastHeartbeatRef.current > 0 && elapsed > 12000) {
         try {
           ws.close();
-        } catch {}
+        } catch { }
       }
     }, 2500);
 
@@ -1191,7 +1197,7 @@ export default function PortalHome() {
       if (ws && ws.readyState === WebSocket.OPEN) {
         try {
           ws.send(JSON.stringify({ type: "command", action: "buzzer", pattern }));
-        } catch {}
+        } catch { }
       }
     };
     window.addEventListener("lentera-trigger-buzzer", handleTriggerBuzzer);
@@ -1444,8 +1450,8 @@ export default function PortalHome() {
                 id="btn-voice-guide"
                 onClick={readIntro}
                 className={`portal-secondary-btn flex items-center justify-center gap-2 ${speaking
-                    ? "!border-[#F5B841] !bg-[#FFF3D6] !text-[#1E1938]"
-                    : ""
+                  ? "!border-[#F5B841] !bg-[#FFF3D6] !text-[#1E1938]"
+                  : ""
                   }`}
                 aria-label={
                   speaking
@@ -1545,20 +1551,19 @@ export default function PortalHome() {
                   <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/15">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          wsConnected && cameraReady
+                        className={`h-2.5 w-2.5 rounded-full ${wsConnected && cameraReady
                             ? "bg-emerald-400 animate-pulse"
                             : wsConnected
-                            ? "bg-amber-400"
-                            : "bg-rose-400"
-                        }`}
+                              ? "bg-amber-400"
+                              : "bg-rose-400"
+                          }`}
                       />
                       <span className="text-xs font-extrabold tracking-wide">
                         {wsConnected && cameraReady
                           ? "Kamera Bawah Siap Membaca Blok (Live)"
                           : wsConnected
-                          ? "WebSocket Terhubung • Menunggu Kamera..."
-                          : "Kamera Belum Terhubung ke Alat"}
+                            ? "WebSocket Terhubung • Menunggu Kamera..."
+                            : "Kamera Belum Terhubung ke Alat"}
                       </span>
                     </div>
                     <button
@@ -1571,7 +1576,71 @@ export default function PortalHome() {
                     </button>
                   </div>
 
-                  <div className="mt-3 relative overflow-hidden rounded-2xl border border-white/15 bg-black/60 aspect-[4/3] flex items-center justify-center">
+                  {/* Info Target Server & Pilihan 1-Klik Raspi Tunnel vs Localhost */}
+                  <div className="mt-2.5 rounded-2xl bg-white/10 border border-white/15 p-2.5 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="text-white/75 font-semibold">Target Server:</span>
+                      <span className="font-mono font-extrabold text-amber-300 truncate max-w-[230px]">
+                        {activeEndpoint === "localhost" || activeEndpoint === "127.0.0.1"
+                          ? "Localhost (127.0.0.1)"
+                          : `Raspi Tunnel (${activeEndpoint})`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            localStorage.setItem("lentera_endpoint_mode", "auto");
+                            localStorage.removeItem("lentera_edge_endpoint");
+                            localStorage.removeItem("lentera_endpoint");
+                          } catch {}
+                          clearDeadTunnels();
+                          setActiveConnMode("auto");
+                          setLivePreviewFrame(null);
+                          setCalibNotice("Beralih ke Otomatis (Mencari Tunnel Raspberry Pi)...");
+                          setTimeout(() => setCalibNotice(null), 2500);
+                          try {
+                            wsInstanceRef.current?.close();
+                          } catch {}
+                        }}
+                        className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition border ${
+                          activeConnMode === "auto"
+                            ? "bg-emerald-500 text-slate-950 border-emerald-300 shadow-sm"
+                            : "bg-white/10 hover:bg-white/20 text-white border-white/15"
+                        }`}
+                      >
+                        Otomatis (Raspi Tunnel)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            localStorage.setItem("lentera_endpoint_mode", "manual");
+                            localStorage.setItem("lentera_edge_endpoint", "localhost");
+                          } catch {}
+                          setActiveConnMode("manual");
+                          setActiveEndpoint("localhost");
+                          setLivePreviewFrame(null);
+                          setCalibNotice("Beralih ke Kamera Lokal Laptop (Localhost)...");
+                          setTimeout(() => setCalibNotice(null), 2500);
+                          try {
+                            wsInstanceRef.current?.close();
+                          } catch {}
+                        }}
+                        className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition border ${
+                          activeConnMode === "manual" &&
+                          (activeEndpoint === "localhost" || activeEndpoint === "127.0.0.1")
+                            ? "bg-amber-400 text-slate-950 border-amber-200 shadow-sm"
+                            : "bg-white/10 hover:bg-white/20 text-white border-white/15"
+                        }`}
+                      >
+                        Lokal (Localhost)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 relative overflow-hidden rounded-2xl border border-white/15 bg-black/60 aspect-[4/3] flex items-center justify-center">
                     {livePreviewFrame ? (
                       <img
                         src={livePreviewFrame}
@@ -1614,7 +1683,7 @@ export default function PortalHome() {
                       onClick={() => {
                         try {
                           wsInstanceRef.current?.close();
-                        } catch {}
+                        } catch { }
                       }}
                       className="rounded-xl bg-[#735CDD] hover:bg-[#5E47C9] px-3 py-2 text-[11px] font-extrabold text-white transition"
                     >
@@ -1674,10 +1743,10 @@ export default function PortalHome() {
                       }}
                       title={`Klik untuk memilih Mode ${cfg.name} (${cfg.rate}x)`}
                       className={`px-1.5 py-3 rounded-2xl text-center border transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 flex flex-col items-center justify-center ${isSelected
-                          ? "bg-amber-400 text-slate-900 border-amber-200 font-bold scale-105 shadow-lg ring-2 ring-amber-300"
-                          : isCurrent
-                            ? "bg-white/20 text-white border-amber-300/80 font-bold ring-1 ring-amber-300/60"
-                            : "bg-black/25 text-white/90 border-white/20 hover:bg-white/10"
+                        ? "bg-amber-400 text-slate-900 border-amber-200 font-bold scale-105 shadow-lg ring-2 ring-amber-300"
+                        : isCurrent
+                          ? "bg-white/20 text-white border-amber-300/80 font-bold ring-1 ring-amber-300/60"
+                          : "bg-black/25 text-white/90 border-white/20 hover:bg-white/10"
                         }`}
                     >
                       <div className="text-sm font-mono font-black">{slot}</div>
