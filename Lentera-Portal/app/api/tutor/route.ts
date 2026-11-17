@@ -52,11 +52,50 @@ function normalizeCircuit(cs: any): { lampReversed: boolean; switchOpen: boolean
   return { lampReversed, switchOpen, pathOpen, allGood };
 }
 
+const COMPONENT_NAME_ID: Record<string, string> = {
+  battery: "Baterai",
+  switch: "Saklar",
+  lamp: "Lampu",
+  straight_cable: "Kabel Lurus",
+  l_cable: "Kabel Belok (L)",
+  t_cable: "Kabel Simpang Tiga (T)",
+  resistor: "Resistor",
+};
+
+function sanitizeCircuitCells(cs: any): Record<string, any> {
+  if (!cs?.cells || typeof cs.cells !== "object") return {};
+  const clean: Record<string, any> = {};
+  for (const [pos, val] of Object.entries(cs.cells)) {
+    if (!val || typeof val !== "object") continue;
+    const comp = String((val as any).component || "");
+    const id = Number((val as any).id || 0);
+    // Abaikan sel A1 (tombol push-to-talk mikrofon) dan kartu identitas (ID >= 30)
+    if (pos === "A1" || comp.startsWith("student_") || comp.startsWith("teacher") || id >= 30) {
+      continue;
+    }
+    clean[pos] = val;
+  }
+  return clean;
+}
+
 function findComponentCells(cs: any, compName: string): string[] {
-  if (!cs?.cells || typeof cs.cells !== "object") return [];
-  return Object.entries(cs.cells)
+  const cells = sanitizeCircuitCells(cs);
+  return Object.entries(cells)
     .filter(([_, val]: [string, any]) => val && val.component === compName)
     .map(([pos]) => pos);
+}
+
+function summarizeBoardComponents(cs: any): string {
+  const cells = sanitizeCircuitCells(cs);
+  const entries = Object.entries(cells);
+  if (entries.length === 0) {
+    return "Papan saat ini KOSONG (belum ada balok komponen rangkaian yang terpasang).";
+  }
+  const items = entries.map(([pos, val]: [string, any]) => {
+    const label = COMPONENT_NAME_ID[val.component] || val.component;
+    return `${label} di kotak ${pos}`;
+  });
+  return `Total ${entries.length} komponen terpasang: ${items.join(", ")}.`;
 }
 
 // Intelligent Offline Fallback Engine
@@ -199,8 +238,8 @@ export async function POST(req: NextRequest) {
     const circuitState = body?.circuitState ?? null;
     const history: ChatTurn[] = Array.isArray(body?.history)
       ? body.history
-          .filter((h: any) => (h?.role === "user" || h?.role === "ai") && typeof h?.text === "string")
-          .slice(-6)
+        .filter((h: any) => (h?.role === "user" || h?.role === "ai") && typeof h?.text === "string")
+        .slice(-6)
       : [];
 
     if (!message) {
@@ -244,8 +283,18 @@ export async function POST(req: NextRequest) {
       diagnosisRule = "\n\nSTATUS SENSOR: Rangkaian berhasil menyala sempurna! Berikan pujian hangat atas ketelitian taktil siswa.";
     }
 
-    const contextBlock = circuitState
-      ? `\n\nData sensor rangkaian fisik saat ini:\n${JSON.stringify(circuitState, null, 2)}\nMode saat ini: ${mode}${diagnosisRule}`
+    const cleanCells = sanitizeCircuitCells(circuitState);
+    const boardSummary = summarizeBoardComponents(circuitState);
+    const sanitizedState = circuitState
+      ? {
+        ...circuitState,
+        placedCount: Object.keys(cleanCells).length,
+        cells: cleanCells,
+      }
+      : null;
+
+    const contextBlock = sanitizedState
+      ? `\n\nDAFTAR PASTI KOMPONEN DI PAPAN SAAT INI (WAJIB PATUHI DAFTAR INI 100%, JANGAN PERNAH MENYEBUT KOMPONEN LAIN YANG TIDAK ADA DI DAFTAR INI, DAN JANGAN PERNAH MENYEBUT BALOK PINTASAN MIKROFON DI A1):\n${boardSummary}\n\nData sensor rangkaian fisik saat ini:\n${JSON.stringify(sanitizedState, null, 2)}\nMode saat ini: ${mode}${diagnosisRule}`
       : `\n\nMode saat ini: ${mode}`;
 
     const messages = [

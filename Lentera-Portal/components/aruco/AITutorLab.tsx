@@ -74,6 +74,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
   const loadingRef = useRef(false);
   const isTranscribingRef = useRef(false);
   const lastA1StateRef = useRef<boolean>(false);
+  const a1TriggerBlockRef = useRef<{ id?: number; component?: string; time: number } | null>(null);
   const isHandlingNavRef = useRef<boolean>(false);
   const lastA5HelpTimeRef = useRef<number>(0);
   const prevCircuitStatusRef = useRef<string>("");
@@ -139,15 +140,28 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
     try {
       const activeCircuit = latestCircuitRef.current;
       const filteredCells: Record<string, any> = {};
+      const recentA1 = a1TriggerBlockRef.current;
+      const nowMs = Date.now();
       if (activeCircuit?.cells) {
         for (const [pos, val] of Object.entries(activeCircuit.cells)) {
-          // Abaikan hanya sel A1 (tombol push-to-talk sementara) dan kartu identitas siswa;
-          // seluruh sel lainnya (termasuk E5 dan A5) dihitung penuh sebagai komponen rangkaian yang sedang disusun!
-          if (val && !isStudentToken(val) && pos !== "A1") {
-            filteredCells[pos] = val;
+          // 1. Abaikan sel A1 (tombol push-to-talk mikrofon) dan kartu identitas siswa
+          if (!val || isStudentToken(val) || pos === "A1") continue;
+          // 2. Jika balok pemicu mikrofon dari A1 baru saja diangkat (<2.5 detik) dan tangan siswa
+          //    tidak sengaja melintasi sel tetangga A1 (A2, B1, B2) saat mengangkatnya, abaikan pantulan tersebut
+          if (
+            recentA1 &&
+            nowMs - recentA1.time < 2500 &&
+            (pos === "A2" || pos === "B1" || pos === "B2") &&
+            ((val as any).id === recentA1.id || (val as any).component === recentA1.component)
+          ) {
+            continue;
           }
+          filteredCells[pos] = val;
         }
       }
+      const hasSwitchOnBoard = Object.values(filteredCells).some(
+        (v: any) => v && v.component === "switch"
+      );
       const cStatus = String(activeCircuit?.status || "open");
       const res = await fetch("/api/tutor", {
         method: "POST",
@@ -160,8 +174,9 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
                 status: cStatus,
                 circuit_closed: cStatus === "success" || cStatus === "polarity_reversed",
                 polarity_correct: cStatus !== "polarity_reversed",
-                switch_state: cStatus === "switch_off" ? "off" : "on",
+                ...(hasSwitchOnBoard ? { switch_state: cStatus === "switch_off" ? "off" : "on" } : {}),
                 graph_type: activeCircuit.graph_type,
+                placedCount: Object.keys(filteredCells).length,
                 cells: filteredCells,
               }
             : null,
@@ -517,11 +532,25 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
         if (!isHandlingNavRef.current) {
           if (isA1Placed && !lastA1StateRef.current) {
             lastA1StateRef.current = true;
+            a1TriggerBlockRef.current = {
+              id: (cellA1 as any)?.id,
+              component: (cellA1 as any)?.component,
+              time: Date.now(),
+            };
             if (!isListeningRef.current && !loadingRef.current && !isTranscribingRef.current) {
               startListening();
             }
+          } else if (isA1Placed && lastA1StateRef.current) {
+            a1TriggerBlockRef.current = {
+              id: (cellA1 as any)?.id,
+              component: (cellA1 as any)?.component,
+              time: Date.now(),
+            };
           } else if (!isA1Placed && lastA1StateRef.current) {
             lastA1StateRef.current = false;
+            if (a1TriggerBlockRef.current) {
+              a1TriggerBlockRef.current.time = Date.now();
+            }
             if (isListeningRef.current) {
               stopListening();
             }
