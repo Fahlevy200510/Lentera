@@ -138,10 +138,10 @@ const RECOGNITION_STEPS: StepDef[] = [
     explanation: "Ini adalah balok Baterai, sumber energi utama rangkaian. Baterai menghasilkan tegangan untuk mendorong arus listrik dari kutub positif menuju kutub negatif melalui rangkaian tertutup.",
   },
   {
-    instruction: "Raba dan cari balok Saklar (tuas geser timbul), letakkan di sel C3.",
-    voice: "Komponen kedua adalah Saklar, pengendali aliran listrik. Raba balok yang memiliki tuas geser timbul di bagian atasnya yang bisa kamu geser dengan jari. Saklar berfungsi menyambung dan memutus arus. Letakkan balok Saklar ini di sel C3.",
+    instruction: "Raba dan cari balok Saklar (saklar putar 90 derajat), letakkan di sel C3.",
+    voice: "Komponen kedua adalah Saklar, pengendali aliran listrik. Raba balok yang memiliki penanda jalur timbul untuk diputar 90 derajat antara posisi ON dan OFF. Saklar berfungsi menyambung dan memutus arus. Letakkan balok Saklar ini di sel C3.",
     targetCells: { "C3": "switch" },
-    hint: "Raba bagian atas balok: temukan tuas geser timbul yang dapat digeser untuk menyambung dan memutus aliran listrik.",
+    hint: "Raba bagian atas balok: temukan simbol saklar timbul yang dapat diputar 90 derajat untuk menyambung dan memutus aliran listrik.",
     explanation: "Ini adalah balok Saklar. Saklar berfungsi menghubungkan dan memutuskan aliran listrik. Untuk menyalakannya, putar balok saklar 90 derajat dari posisi terakhirnya hingga ON, maka arus listrik mengalir. Putar lagi 90 derajat untuk kembali ke OFF, aliran listrik terputus dan lampu akan padam.",
   },
   {
@@ -198,10 +198,10 @@ const ALL_REGISTERED_QUIZ_BANK: {
     },
     {
       title: "Pengendali Aliran Listrik",
-      question: "Komponen manakah yang berfungsi menghubungkan dan memutuskan aliran listrik dengan tuas geser?",
+      question: "Komponen manakah yang berfungsi menghubungkan dan memutuskan aliran listrik saat diputar 90 derajat?",
       component: "switch",
-      hint: "Cari balok yang memiliki tuas geser timbul yang dapat digeser ke posisi ON atau OFF di bagian atasnya.",
-      explanation: "Tepat sekali! Itu adalah Saklar geser untuk menghubungkan dan memutuskan aliran listrik.",
+      hint: "Cari balok saklar yang dapat diputar 90 derajat antara posisi ON dan OFF di bagian atasnya.",
+      explanation: "Tepat sekali! Itu adalah Saklar untuk menghubungkan dan memutuskan aliran listrik.",
     },
     {
       title: "Penghantar Arus Jalur Lurus",
@@ -571,7 +571,7 @@ export const getStudentNameFromToken = (cell: any): string => {
 
 const COMPONENT_TACTILE_HINT: Record<string, string> = {
   battery: "memiliki simbol plus dan minus timbul di kedua ujungnya",
-  switch: "memiliki tuas geser timbul yang dapat digeser ke posisi ON atau OFF di atasnya",
+  switch: "memiliki penanda saklar timbul yang dapat diputar 90 derajat ke posisi ON atau OFF di atasnya",
   lamp: "memiliki kubah bundar timbul serta tanda plus (+) dan minus (-) timbul untuk kutub polaritasnya",
   straight_cable: "memiliki alur garis lurus timbul melintang",
   l_cable: "memiliki alur timbul siku-siku seperti huruf L",

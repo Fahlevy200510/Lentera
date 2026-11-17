@@ -81,7 +81,7 @@ function getStepDirection(fromCell: string, toCell: string): Direction | null {
   return null;
 }
 
-function getSwitchWireOrientation(
+export function getSwitchWireOrientation(
   cellName: string,
   cells: Record<string, any>,
   loop?: string[]
@@ -130,7 +130,7 @@ function getSwitchWireOrientation(
   return rot === 90 || rot === 270 ? "vertical" : "horizontal";
 }
 
-function isSwitchClosedInLoop(
+export function isSwitchClosedInLoop(
   cellName: string,
   cells: Record<string, any>,
   variant: string = "live",
@@ -154,7 +154,7 @@ function isSwitchClosedInLoop(
  * memiliki beban lampu/resistor, seluruh saklar di jalurnya ON, dan polaritas lampu benar).
  * Dengan ini, pada rangkaian paralel, cabang yang saklarnya masih OFF tidak akan ikut menyala!
  */
-function computeActiveCircuitCells(cells: Record<string, any>, variant: string = "live"): Set<string> {
+export function computeActiveCircuitCells(cells: Record<string, any>, variant: string = "live"): Set<string> {
   const active = new Set<string>();
   if (!cells || typeof cells !== "object") return active;
   if (variant === "open") return active;

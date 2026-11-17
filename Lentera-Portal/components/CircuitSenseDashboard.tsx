@@ -1419,7 +1419,7 @@ const handbookSections: HandbookSection[] = [
       "Terbuka: kabel terlepas atau saklar OFF → lampu mati.",
       "Saklar adalah komponen yang sengaja digunakan untuk membuka atau menutup jalur listrik.",
     ],
-    tip: "Gunakan saklar untuk demonstrasi langsung: minta siswa menggeser ke ON (tertutup) lalu OFF (terbuka), dan rasakan/dengarkan perbedaannya — lampu menyala versus mati.",
+    tip: "Gunakan saklar untuk demonstrasi langsung: minta siswa memutar blok saklar 90° antara posisi ON (tertutup, sejajar jalur kabel) dan OFF (terbuka), lalu rasakan dan dengarkan perbedaannya — lampu menyala versus mati.",
     diagram: "closed-open",
   },
   {
