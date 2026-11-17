@@ -156,6 +156,25 @@ Pastikan seluruh tab di laptop operator **sudah terbuka dan siap ditampilkan dal
 >     2. **Eksplorasi mandiri terbatas (bergantung pendamping)** $\rightarrow$ Dijawab dengan **Kamera Bawah + Evaluator Graf + 5 Modul Panduan & AI Tutor** yang langsung memberi tahu letak salahnya (misal sakelar belum diputar atau kutub lampu terbalik) secara mandiri tanpa harus memanggil guru.
 >     3. **Guru tidak punya data objektif** $\rightarrow$ Dijawab dengan **Dashboard LENTERA Learn (`/dashboard`) dan Rapor AI PDF**, yang otomatis merekam modul yang tuntas, skor XP, dan perkembangan tiap siswa secara *real-time*."*
 
+### 14. [Rujukan Resmi KD & Buku Siswa Kemendikbud — Kriteria 2b Kesesuaian Indikator Kompetensi]
+> - **Pertanyaan Juri: "Materi rangkaian listrik di LENTERA ini merujuk pada Kompetensi Dasar (KD) atau Buku Kurikulum kelas berapa untuk Tunanetra?"**
+> - **Jawaban Pasti & Bukti Dokumen Resmi Kemendikbud:**
+>   *"Materi di LENTERA merujuk langsung pada **Kompetensi Dasar (KD) IPA Tunanetra dan Buku Siswa Resmi Kemendikbud**, Bapak/Ibu, yaitu:*
+>   1. **Jenjang SMPLB Tunanetra Kelas VII (KD 3.4 & KD 4.4):**
+>      - **KD 3.4 (Pengetahuan):** *'Menelaah rangkaian listrik sederhana'* $\rightarrow$ Diwujudkan lewat **Modul 1 (`A1` Pengenalan Komponen)** dan **Modul 2 (`B1` Kuis Taktil)**.
+>      - **KD 4.4 (Keterampilan):** *'Membuat rangkaian listrik sederhana dalam kehidupan sehari-hari'* $\rightarrow$ Diwujudkan lewat **Modul 3 (`C1` Rangkaian Seri)** dan **Modul 4 (`D1` Rangkaian Paralel)**.
+>   2. **Jenjang SMPLB Tunanetra Kelas VIII (KD 3.3 & KD 4.3):**
+>      - *'Menganalisis kegunaan energi listrik, konversi energi listrik, dan transmisi energi listrik'* serta melaporkan aktivitas penggunaannya.
+>   3. **Jenjang SMALB Tunanetra Kelas XI (Buku Siswa IPA Kelas XI SMALB Tunanetra — Bab 6 Listrik, hal. 133–143):**
+>      - Membahas **Komponen Listrik, Arus Listrik Rangkaian Tertutup (Gambar 6.5), Peringatan Hubungan Singkat/Korsleting (hal. 140), Rangkaian Seri (Gambar 6.6), dan Rangkaian Paralel (Gambar 6.7)**.*
+>   4. **Bukti Nyata Mengapa LENTERA Sangat Dibutuhkan (Temuan dari Buku Siswa IPA XI SMALB Tunanetra hal. 139–142):**
+>      *Bahkan di dalam **Buku Siswa IPA Kelas XI khusus SMALB Tunanetra** terbitan Kemendikbud sekalipun (halaman 139–142), penjelasan rangkaian tertutup, seri, dan paralel masih tertulis **'Perhatikan gambar 6.5'**, **'gambar 6.6 menunjukkan dua lampu dirangkai seri'**, dan **'Gambar 6.7 menunjukkan dua lampu dirangkai paralel'** yang berupa gambar visual dua dimensi! LENTERA hadir mengubah Gambar 6.5, 6.6, dan 6.7 di buku teks tersebut menjadi **papan taktil 5×5 yang benar-benar bisa diraba, dirakit, dan didengar langsung oleh siswa tunanetra**.*
+>   5. **4 Referensi Tambahan Resmi (Kurikulum Merdeka, Program Kekhususan SLB-A, Regulasi, & Jurnal):**
+>      - **Keputusan Kepala BSKAP Kemendikbudristek No. 032/H/KR/2024 (dan No. 033/H/KR/2022) tentang Capaian Pembelajaran (CP) Kurikulum Merdeka (Fase D — SMP/SMPLB):** Pada elemen *Pemahaman IPA*, peserta didik dituntut *"membuat rangkaian listrik sederhana, memahami gejala kemagnetan dan kelistrikan untuk menyelesaikan tantangan dalam kehidupan sehari-hari"*. Bagi PDBK Tunanetra tanpa hambatan intelektual, CP yang digunakan setara dengan CP reguler namun **wajib dimodifikasi medianya menjadi nonvisual (audio-taktil)**.
+>      - **Kurikulum Program Kebutuhan Khusus (PKKh) — Pengembangan Orientasi, Mobilitas, Sosial, dan Komunikasi (POMSK) Tunanetra Kemendikbudristek:** Menetapkan bahwa siswa tunanetra wajib dilatih **keterampilan kompensatoris** melalui optimalisasi **indra perabaan (taktil)**, **orientasi spasial** (mengenali posisi arah atas, bawah, kiri, kanan, dan titik pusat), serta **indra pendengaran (auditori)**—yang semuanya dilatih langsung di atas grid 5×5 LENTERA (`A1–E5` dan titik pusat `C3`).
+>      - **Permendikbudristek No. 48 Tahun 2023 tentang Akomodasi yang Layak untuk Peserta Didik Penyandang Disabilitas:** Mewajibkan satuan pendidikan menyediakan media dan alat peraga pembelajaran yang aksesibel sesuai ragam disabilitas peserta didik.
+>      - **Riset Jurnal Ilmiah Pendidikan IPA Tunanetra (Widiyawati & Nurwahidah, 2018 — *Elclivs: Electricity Circuit for Visually Impaired*):** Membuktikan bahwa siswa SMPLB-A (Tunanetra) memiliki antusiasme dan penalaran konseptual yang tinggi pada materi rangkaian listrik apabila difasilitasi dengan **media taktil berbasis inkuiri dan indikator audio (*buzzer*)** sebagai pengganti indikator cahaya lampu."*
+
 ---
 ---
 

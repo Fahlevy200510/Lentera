@@ -1231,6 +1231,7 @@ function CircuitDiagram({ variant }: { variant: "closed" | "open" | "series" | "
   };
   const loopPath = "M60,40 L260,40 L260,130 L60,130 Z";
   const branchPath = "M60,40 L230,40 L230,130 L60,130 Z";
+  const branchPath2 = "M60,40 L296,40 L296,130 L60,130 Z";
 
   return (
     <div>
@@ -1291,6 +1292,7 @@ function CircuitDiagram({ variant }: { variant: "closed" | "open" | "series" | "
             <Wire x1={296} y1={98} x2={296} y2={130} />
             <Wire x1={296} y1={130} x2={260} y2={130} />
             <CurrentDots path={branchPath} />
+            <CurrentDots path={branchPath2} />
           </>
         )}
       </svg>
@@ -1345,10 +1347,10 @@ function IsoBlock({ front, side, symbol }: { front: string; side: string; symbol
 
 interface TactilePart { name: string; symbol: "battery" | "switch" | "lamp" | "cable"; front: string; side: string; braille: string; texture: string; }
 const tactileParts: TactilePart[] = [
-  { name: "Baterai", symbol: "battery", front: C.blue, side: "#1D4ED8", braille: "Braille “B” + tanda plus/minus timbul", texture: "Kedua kutub bertanda taktil timbul: simbol plus (+) dan simbol minus (-)" },
-  { name: "Saklar", symbol: "switch", front: C.green, side: "#15803D", braille: "Braille “S” + tuas geser", texture: "Tuas timbul yang dapat digeser ON/OFF dengan rabaan" },
-  { name: "Lampu", symbol: "lamp", front: "#F59E0B", side: "#B45309", braille: "Braille “L” + permukaan bulat timbul", texture: "Terasa hangat / bergetar halus saat dinyalakan" },
-  { name: "Kabel", symbol: "cable", front: C.primary, side: C.primaryDeep, braille: "Jalur karet timbul di sepanjang papan", texture: "Kasar dan timbul dibanding permukaan papan" },
+  { name: "Baterai", symbol: "battery", front: C.blue, side: "#1D4ED8", braille: "Simbol (+) dan (−) timbul", texture: "Kedua kutub bertanda taktil timbul: tanda tambah (+) dan garis pendek tebal (-)" },
+  { name: "Saklar", symbol: "switch", front: C.green, side: "#15803D", braille: "Lingkaran tengah & 2 garis samping", texture: "Diputar 90 derajat di dalam slot untuk menyalakan (ON) atau mematikan (OFF)" },
+  { name: "Lampu", symbol: "lamp", front: "#F59E0B", side: "#B45309", braille: "Lingkaran berongga di tengah", texture: "Beban listrik pasif dengan indikator nyala melalui suara narator dan buzzer" },
+  { name: "Kabel", symbol: "cable", front: C.primary, side: C.primaryDeep, braille: "Alur garis timbul (Lurus, L, T)", texture: "Garis timbul lurus, belok 90° (L), dan simpang tiga (T) di atas permukaan balok" },
 ];
 
 function TactilePartCard({ part, delay }: { part: TactilePart; delay: number }) {

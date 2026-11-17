@@ -69,8 +69,8 @@ function sanitizeCircuitCells(cs: any): Record<string, any> {
     if (!val || typeof val !== "object") continue;
     const comp = String((val as any).component || "");
     const id = Number((val as any).id || 0);
-    // Abaikan sel A1 (tombol push-to-talk mikrofon) dan kartu identitas (ID >= 30)
-    if (pos === "A1" || comp.startsWith("student_") || comp.startsWith("teacher") || id >= 30) {
+    // Abaikan kartu identitas siswa/guru (ID >= 30)
+    if (comp.startsWith("student_") || comp.startsWith("teacher") || id >= 30) {
       continue;
     }
     clean[pos] = val;
@@ -93,6 +93,9 @@ function summarizeBoardComponents(cs: any): string {
   }
   const items = entries.map(([pos, val]: [string, any]) => {
     const label = COMPONENT_NAME_ID[val.component] || val.component;
+    if (val.component === "switch" && typeof val.is_on === "boolean") {
+      return `${label} di kotak ${pos} (status: ${val.is_on ? "ON/Tertutup" : "OFF/Terbuka"})`;
+    }
     return `${label} di kotak ${pos}`;
   });
   return `Total ${entries.length} komponen terpasang: ${items.join(", ")}.`;

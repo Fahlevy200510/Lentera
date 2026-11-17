@@ -142,15 +142,22 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
       const filteredCells: Record<string, any> = {};
       const recentA1 = a1TriggerBlockRef.current;
       const nowMs = Date.now();
+      const totalNonStudent = activeCircuit?.cells
+        ? Object.values(activeCircuit.cells).filter((v) => v && !isStudentToken(v)).length
+        : 0;
       if (activeCircuit?.cells) {
         for (const [pos, val] of Object.entries(activeCircuit.cells)) {
-          // 1. Abaikan sel A1 (tombol push-to-talk mikrofon) dan kartu identitas siswa
-          if (!val || isStudentToken(val) || pos === "A1") continue;
-          // 2. Jika balok pemicu mikrofon dari A1 baru saja diangkat (<2.5 detik) dan tangan siswa
-          //    tidak sengaja melintasi sel tetangga A1 (A2, B1, B2) saat mengangkatnya, abaikan pantulan tersebut
+          if (!val || isStudentToken(val)) continue;
+          // Jika A1 dipakai sebagai tombol push-to-talk (bukan bagian dari rangkaian >= 4 balok yang sedang menempel), abaikan A1
+          if (pos === "A1" && (isListeningRef.current || totalNonStudent <= 3)) {
+            continue;
+          }
+          // Jika balok pemicu mikrofon dari A1 baru saja diangkat (<2.5 detik) dan tangan siswa
+          // tidak sengaja melintasi sel tetangga A1 (A2, B1, B2) saat mengangkatnya, abaikan pantulan tersebut
           if (
             recentA1 &&
             nowMs - recentA1.time < 2500 &&
+            totalNonStudent <= 3 &&
             (pos === "A2" || pos === "B1" || pos === "B2") &&
             ((val as any).id === recentA1.id || (val as any).component === recentA1.component)
           ) {

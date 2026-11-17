@@ -628,6 +628,14 @@ export default function ArUcoDetector() {
                     .join(", ");
                   return `Terdeteksi di papan: ${listStr}`;
                 }
+                if (st === "success") {
+                  const offSwitches = Object.entries(detections.cells || {})
+                    .filter(([, v]: [string, any]) => v && v.component === "switch" && v.is_on === false)
+                    .map(([cell]) => cell);
+                  if (offSwitches.length > 0) {
+                    return `Rangkaian paralel aktif sebagian: satu cabang lampu menyala, sedangkan saklar di ${offSwitches.join(", ")} masih dalam posisi OFF.`;
+                  }
+                }
                 return detections.circuit_status?.narration;
               })()}
             </div>
