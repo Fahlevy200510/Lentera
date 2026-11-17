@@ -41,8 +41,8 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "ai",
-      text: "Halo! Aku LENTERA AI Tutor di Edge Lab. Kamu bisa bertanya apa saja tentang rangkaian listrik sambil merakit balok di papan. Tekan tombol mikrofon untuk bertanya lewat suara, atau ketik pertanyaanmu!",
-      note: "AI Tutor Siap Mendampingi Lab",
+      text: "Halo! Aku LENTERA AI Tutor. Di sini kamu bisa menyusun balok rangkaian listrik langsung di papan sambil bertanya kepadaku! Untuk bertanya lewat suara: taruh satu balok apa saja di kotak sudut kiri bawah A1, ucapkan pertanyaanmu, lalu angkat kembali balok dari A1 agar aku langsung menganalisis rangkaianmu dan menjawab.",
+      note: "AI Tutor Terhubung ke Kamera Papan Real-Time",
     },
   ]);
   const [input, setInput] = useState("");
@@ -76,6 +76,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
   const lastA1StateRef = useRef<boolean>(false);
   const isHandlingNavRef = useRef<boolean>(false);
   const lastA5HelpTimeRef = useRef<number>(0);
+  const prevCircuitStatusRef = useRef<string>("");
 
   // Auto-scroll ke pesan terbaru
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
     cancelSpeech();
     playEarcon("click");
     speakNarration(
-      "Selamat datang di Tanya AI Tutor! Di sini kamu bisa bertanya apa saja tentang rangkaian listrik dan komponen di mejamu. Cara bertanya: letakkan satu balok di kotak sudut kiri bawah A1, lalu langsung bicaralah mengajukan pertanyaanmu. Jika sudah selesai bicara, segera angkat balok dari A1 agar AI bisa memproses dan menjawab. Jika ingin kembali ke panduan modul, letakkan balok di sudut kanan atas E5. Silakan letakkan balok di A1 dan ajukan pertanyaanmu!",
+      "Selamat datang di Tanya AI Tutor! Di sini kamu bisa menyusun balok rangkaian listrik di atas papan sambil bertanya langsung kepadaku. Cara bertanya dengan suara: letakkan satu balok apa saja di kotak sudut kiri bawah A1, lalu langsung bicaralah mengajukan pertanyaanmu. Jika sudah selesai bicara, segera angkat balok dari A1 agar AI langsung memeriksa susunan balok di papanmu dan menjawab. Jika ingin kembali ke panduan modul, pastikan papan kosong lalu letakkan satu balok di sudut kanan atas E5. Silakan merangkai di papan atau taruh balok di A1 untuk bertanya!",
       {
         tag: "ai-tutor-lab-intro",
         rate: getSavedSpeechRate(),
@@ -140,8 +141,9 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
       const filteredCells: Record<string, any> = {};
       if (activeCircuit?.cells) {
         for (const [pos, val] of Object.entries(activeCircuit.cells)) {
-          // Abaikan balok pintasan push-to-talk di A1, bantuan di A5, atau keluar di E5
-          if (val && !isStudentToken(val) && pos !== "A1" && pos !== "A5" && pos !== "E5") {
+          // Abaikan hanya sel A1 (tombol push-to-talk sementara) dan kartu identitas siswa;
+          // seluruh sel lainnya (termasuk E5 dan A5) dihitung penuh sebagai komponen rangkaian yang sedang disusun!
+          if (val && !isStudentToken(val) && pos !== "A1") {
             filteredCells[pos] = val;
           }
         }
@@ -450,9 +452,24 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
 
         const cellA1 = cells["A1"];
         const cellE5 = cells["E5"];
-        const isA1Placed = Boolean(cellA1 && !isStudentToken(cellA1));
+        // Bebas gunakan balok apa saja (komponen maupun kartu identitas) di A1 untuk Push-to-Talk mikrofon
+        const isA1Placed = Boolean(cellA1);
         const isE5Placed = Boolean(cellE5 && !isStudentToken(cellE5));
         const isE5Student = isStudentToken(cellE5);
+        const nonA1CircuitBlocks = Object.entries(cells).filter(
+          ([k, v]) => Boolean(v) && !isStudentToken(v) && k !== "A1"
+        ).length;
+
+        // Umpan balik bunyi instan saat siswa merangkai di dalam Tanya AI (menyala / korsleting)
+        const currStatus = String(e.detail.status || "");
+        if (currStatus !== prevCircuitStatusRef.current) {
+          prevCircuitStatusRef.current = currStatus;
+          if (currStatus === "success" || currStatus === "closed") {
+            playEarcon("victory");
+          } else if (currStatus === "short_circuit" || currStatus === "short") {
+            playEarcon("warning");
+          }
+        }
 
         // 1. Kartu Siswa di E5 -> Selesai / Logout
         if (isE5Student && !isHandlingNavRef.current) {
@@ -482,8 +499,8 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           return;
         }
 
-        // 2. Balok di E5 (sudut kanan atas) -> Kembali ke Panduan Modul (Menu Utama)
-        if (isE5Placed && !isHandlingNavRef.current) {
+        // 2. Satu balok di E5 saat papan kosong -> Kembali ke Panduan Modul (tidak mengganggu jika sedang merakit >=2 balok)
+        if (isE5Placed && nonA1CircuitBlocks === 1 && !isA1Placed && !isHandlingNavRef.current) {
           isHandlingNavRef.current = true;
           cancelSpeech();
           stopListening();
@@ -496,7 +513,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           return;
         }
 
-        // 3. Tangible Push-To-Talk via balok di A1 (sudut kiri bawah)
+        // 3. Tangible Push-To-Talk via balok apa saja di A1 (sudut kiri bawah) sambil merangkai
         if (!isHandlingNavRef.current) {
           if (isA1Placed && !lastA1StateRef.current) {
             lastA1StateRef.current = true;
@@ -511,10 +528,10 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           }
         }
 
-        // 4. Balok di A5 (sudut kiri atas) -> Ulangi panduan fitur Tanya AI Tutor
+        // 4. Satu balok di A5 saat papan kosong -> Ulangi panduan fitur Tanya AI Tutor
         const cellA5 = cells["A5"];
         const isA5Placed = Boolean(cellA5 && !isStudentToken(cellA5));
-        if (isA5Placed && !isA1Placed && !isE5Placed && !isHandlingNavRef.current) {
+        if (isA5Placed && nonA1CircuitBlocks === 1 && !isA1Placed && !isE5Placed && !isHandlingNavRef.current) {
           const now = Date.now();
           if (now - lastA5HelpTimeRef.current > 7000 && !isListeningRef.current && !loadingRef.current) {
             lastA5HelpTimeRef.current = now;
@@ -653,7 +670,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
       <div className="flex items-center gap-2 py-1.5 px-3 mb-2 rounded-xl bg-[#FFFDF7] border border-[#F5B841]/45 text-[11px] text-[#4A4458] shrink-0">
         <strong className="font-extrabold text-[#9A5B00]">Pintasan Taktil:</strong>
         <span>
-          Taruh balok di <span className="font-mono font-black text-[#5840BA]">A1</span> untuk bicara & angkat jika selesai. Taruh balok di <span className="font-mono font-black text-[#5840BA]">E5</span> untuk kembali.
+          Bebas merakit di papan sambil bertanya! Taruh balok apa saja di <span className="font-mono font-black text-[#5840BA]">A1</span> untuk bicara & angkat jika selesai. Kosongkan papan & taruh 1 balok di <span className="font-mono font-black text-[#5840BA]">E5</span> untuk kembali.
         </span>
       </div>
 

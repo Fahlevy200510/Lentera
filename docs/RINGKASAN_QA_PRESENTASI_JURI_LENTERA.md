@@ -145,6 +145,17 @@ Pastikan seluruh tab di laptop operator **sudah terbuka dan siap ditampilkan dal
 > - **Jika Gurunya Tunanetra:** *"Guru tunanetra tidak perlu mengklik layar komputer sama sekali. Saat berada di halaman dashboard LENTERA Learn, guru cukup meletakkan balok di pojok kanan bawah (**kotak E1**) untuk mendengarkan laporan lengkap perkembangan satu kelas lewat suara, atau di tengah atas (**kotak C5**) untuk mendengarkan rapor tiap siswa."*
 > - **Soal Biaya & Perawatan:** *"Sangat terjangkau untuk sekolah, karena di dalam balok-baloknya tidak ada mesin atau sensor elektronik yang mahal. Baloknya murni cetakan 3D plastik PLA dengan stiker kode di bawahnya. Kalau ada balok yang hilang atau jatuh di sekolah, cukup dicetak ulang dengan biaya **di bawah Rp5.000 per balok**."*
 
+### 13. [Khusus Slide 01 — Urgensi Aksesibilitas Pendidikan (Data 36% vs 8%, +29%, dan 3 Masalah)]
+> - **Pertanyaan 1: "Angka 36% vs 8% (UNICEF & Bappenas, 2023) itu data khusus tunanetra atau disabilitas secara umum? Apa hubungannya anak tidak sekolah dengan alat praktikum listrik?"**
+>   - **Jawaban Mudah:** *"Angka **36% berbanding 8%** dari **UNICEF dan Bappenas (2023)** itu adalah data **anak dengan disabilitas secara umum** di Indonesia, Bapak/Ibu—bukan khusus tunanetra saja. Kami menampilkan data ini sebagai gambaran besar bahwa kesenjangan akses pendidikan bagi anak disabilitas masih sangat nyata. Bahkan bagi anak-anak tunanetra yang **sudah berhasil masuk sekolah pun**, di dalam kelas mereka masih menghadapi hambatan kedua: yaitu materi praktikum seperti rangkaian listrik masih mengandalkan gambar visual dan belum memiliki alat peraga yang bisa mereka gunakan secara mandiri."*
+> - **Pertanyaan 2: "Di slide tertulis sekolah inklusi bertambah +29% (2020–2021), tapi kenapa kalian mengujinya di SLB Negeri Semarang, bukan di sekolah inklusi?"**
+>   - **Jawaban Mudah:** *"LENTERA kami rancang untuk **kedua jenis sekolah tersebut**, Bapak/Ibu: baik **SLB-A** maupun **Sekolah Inklusi**. Kami melakukan pengujian awal di **SLB Negeri Semarang** karena di sana berkumpul siswa tunanetra dan guru pendamping khusus yang paling berpengalaman untuk memvalidasi kelayakan rabaan Braille, ukuran balok, dan kecepatan suara alat kami. Namun, manfaat LENTERA justru akan sangat terasa pula di **sekolah inklusi (+29%)**, di mana 1 guru reguler harus mengajar puluhan siswa awas sekaligus siswa tunanetra. Dengan LENTERA, siswa tunanetra di kelas inklusi bisa praktikum mandiri tanpa harus ditunggui guru setiap detik."*
+> - **Pertanyaan 3: "Bagaimana LENTERA menjawab 3 poin masalah di sisi kanan slide (Visual, Eksplorasi Mandiri, dan Data Objektif Guru)?"**
+>   - **Jawaban Mudah (Pasangkan 1-per-1):**
+>     1. **Media didominasi visual** $\rightarrow$ Dijawab dengan **Papan Taktil 5×5 ber-Braille, Balok 3D Timbul, Suara Narator, dan Buzzer** (mengubah informasi mata menjadi rabaan dan telinga).
+>     2. **Eksplorasi mandiri terbatas (bergantung pendamping)** $\rightarrow$ Dijawab dengan **Kamera Bawah + Evaluator Graf + 5 Modul Panduan & AI Tutor** yang langsung memberi tahu letak salahnya (misal sakelar belum diputar atau kutub lampu terbalik) secara mandiri tanpa harus memanggil guru.
+>     3. **Guru tidak punya data objektif** $\rightarrow$ Dijawab dengan **Dashboard LENTERA Learn (`/dashboard`) dan Rapor AI PDF**, yang otomatis merekam modul yang tuntas, skor XP, dan perkembangan tiap siswa secara *real-time*."*
+
 ---
 ---
 
