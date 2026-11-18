@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from "react";
-import { getStudentProgress, getActiveStudent, setActiveStudent, PRESET_STUDENTS, buildStudentLearningNarration, buildTeacherClassNarration, type StudentProgress } from "@/utils/progress";
+import { getStudentProgress, getActiveStudent, setActiveStudent, PRESET_STUDENTS, buildStudentLearningNarration, buildTeacherClassNarration, computeStudentMasteryPercent, type StudentProgress } from "@/utils/progress";
 import { normalizeIndonesianPhonetics } from "@/utils/phonetics";
 import { speakNarration, cancelSpeech, isSpeaking } from "@/utils/audioCoordinator";
 import { playEarcon } from "@/utils/soundEffects";
@@ -292,6 +292,19 @@ function StudentHome() {
 
   const earnedAchievementsCount = dynamicAchievements.filter((a) => a.earned).length;
   const xpPercent = Math.min(100, Math.round((progress.xp / 1000) * 100));
+  const completedModCount = [
+    progress.modules.component_recognition,
+    progress.modules.component_quiz,
+    progress.modules.series_circuit,
+    progress.modules.parallel_circuit,
+    progress.modules.circuit_troubleshoot,
+  ].filter(Boolean).length;
+  const bonusMinutes = Math.max(0, Math.round((progress.xp - 250) / 25));
+  const dynamicWeekly = weekly.map((w, idx) =>
+    idx === 6 ? { ...w, min: w.min + bonusMinutes } : idx === 5 ? { ...w, min: w.min + completedModCount * 3 } : w
+  );
+  const isStreakCompleteToday = progress.xp >= 500 || completedModCount >= 2;
+  const streakCount = isStreakCompleteToday ? 7 : 6;
 
   let currentLessonTitle = "Rangkaian Seri";
   let currentLessonSub = "Pelajaran 7 dari 12";
@@ -489,7 +502,7 @@ function StudentHome() {
             right={
               <button
                 onClick={() => {
-                  const summary = weekly.map((w) => `${w.day} ${w.min} menit`).join(", ");
+                  const summary = dynamicWeekly.map((w) => `${w.day} ${w.min} menit`).join(", ");
                   speakNarration(`Grafik durasi praktik di papan minggu ini: ${summary}. Seluruh waktu tercatat otomatis oleh sensor LENTERA.`, {
                     tag: "chart-weekly",
                   });
@@ -521,7 +534,7 @@ function StudentHome() {
                 <tr><th scope="col">Hari</th><th scope="col">Durasi (Menit)</th></tr>
               </thead>
               <tbody>
-                {weekly.map((d) => (
+                {dynamicWeekly.map((d) => (
                   <tr key={d.day}>
                     <td>Hari {d.day}</td>
                     <td>{d.min} menit</td>
@@ -531,13 +544,13 @@ function StudentHome() {
             </table>
 
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekly} margin={{ top: 8, right: 6, left: -22, bottom: 0 }}>
+              <BarChart data={dynamicWeekly} margin={{ top: 8, right: 6, left: -22, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 4" stroke="rgba(46,42,94,0.06)" vertical={false} />
                 <XAxis dataKey="day" tick={{ fill: C.textSoft, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: C.textSoft, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip cursor={{ fill: "rgba(139,92,246,0.06)" }} contentStyle={{ background: "#fff", border: "none", borderRadius: 14, boxShadow: C.shadowSm, fontFamily: BODY, fontSize: 12.5, color: C.text }} />
                 <Bar dataKey="min" radius={[9, 9, 3, 3]}>
-                  {weekly.map((d, i) => <Cell key={i} fill={d.c} />)}
+                  {dynamicWeekly.map((d, i) => <Cell key={i} fill={d.c} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -555,14 +568,14 @@ function StudentHome() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, margin: "18px 0 4px" }}>
-            <span style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 46, color: C.text, lineHeight: 1 }}>7</span>
+            <span style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 46, color: C.text, lineHeight: 1 }}>{streakCount}</span>
             <span style={{ fontSize: 15, fontWeight: 700, color: C.textSoft }}>hari</span>
           </div>
           <div className="flex" style={{ gap: 6, marginTop: 14 }}>
             {["S", "S", "R", "K", "J", "S", "M"].map((d, i) => (
               <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ height: 34, borderRadius: 10, background: i < 6 ? C.pink : "rgba(249,168,212,0.25)", display: "grid", placeItems: "center" }}>
-                  {i < 6 && <CheckCircle2 size={16} color="#fff" />}
+                <div style={{ height: 34, borderRadius: 10, background: i < streakCount ? C.pink : "rgba(249,168,212,0.25)", display: "grid", placeItems: "center" }}>
+                  {i < streakCount && <CheckCircle2 size={16} color="#fff" />}
                 </div>
                 <div style={{ fontSize: 10.5, color: C.textSoft, marginTop: 5, fontWeight: 600 }}>{d}</div>
               </div>
@@ -647,18 +660,86 @@ function TeacherOverview() {
   const dynamicStudents = students.map((st) => {
     if (!st.id) return st;
     const prog = getStudentProgress(st.id);
-    const completedMods = [
-      prog.modules.component_recognition,
-      prog.modules.component_quiz,
-      prog.modules.series_circuit,
-      prog.modules.parallel_circuit,
-      prog.modules.circuit_troubleshoot,
-    ].filter(Boolean).length;
-    const calcMastery = Math.min(100, Math.round(Math.min(prog.xp, 1000) * 0.065 + completedMods * 7));
+    const calcMastery = computeStudentMasteryPercent(prog);
     const calcLevel = prog.xp >= 1000 ? "Insinyur" : prog.xp >= 500 ? "Teknisi" : "Penjelajah";
-    const calcStatus: [string, string] = calcMastery >= 80 ? ["blue", "Siap naik level"] : calcMastery >= 55 ? ["green", "Sesuai target"] : ["warn", "Perlu bantuan"];
+    const calcStatus: [string, string] =
+      calcMastery >= 80
+        ? ["blue", "Siap naik level"]
+        : calcMastery >= 55
+        ? ["green", "Sesuai target"]
+        : ["warn", "Perlu bantuan"];
     return { ...st, level: calcLevel, mastery: calcMastery, status: calcStatus };
   });
+
+  const activeProgs = ["via", "amira", "luthfi"].map((id) => getStudentProgress(id));
+  const totalCompletedMods = activeProgs.reduce(
+    (sum, p) =>
+      sum +
+      [
+        p.modules.component_recognition,
+        p.modules.component_quiz,
+        p.modules.series_circuit,
+        p.modules.parallel_circuit,
+        p.modules.circuit_troubleshoot,
+      ].filter(Boolean).length,
+    0
+  );
+  const classAvgMastery = Math.round(
+    dynamicStudents.reduce((sum, s) => sum + s.mastery, 0) / dynamicStudents.length
+  );
+
+  const avgSkillVal = (key: keyof StudentProgress["skills"], base: number) => {
+    const liveAvg =
+      activeProgs.reduce((acc, p) => acc + p.skills[key] * 20, 0) / activeProgs.length;
+    return Math.min(100, Math.round(liveAvg * 0.6 + base * 0.4));
+  };
+
+  const dynamicSkillRadar = [
+    { skill: "Baterai", value: avgSkillVal("battery", 90) },
+    { skill: "Kabel", value: avgSkillVal("cable", 82) },
+    { skill: "Saklar", value: avgSkillVal("switch", 76) },
+    { skill: "Arus", value: avgSkillVal("flow", 54) },
+    { skill: "Seri", value: avgSkillVal("series", 63) },
+    { skill: "Paralel", value: avgSkillVal("parallel", 38) },
+  ];
+
+  const dynamicMasteryTrend = masteryTrend.map((m, idx) =>
+    idx === masteryTrend.length - 1 ? { ...m, mastery: classAvgMastery } : m
+  );
+
+  const seriesReadyCount = activeProgs.filter((p) => p.modules.series_circuit).length + 2;
+  const flowRadarVal = dynamicSkillRadar.find((s) => s.skill === "Arus")?.value ?? 54;
+
+  const dynamicInsights: Insight[] = [
+    insights[0],
+    {
+      icon: Brain,
+      tone: "purple",
+      tag: "Miskonsepsi",
+      text: `Konsep Aliran Arus saat ini berada di rata-rata ${flowRadarVal}%. Beberapa siswa masih perlu penguatan meraba arah kutub + dan −.`,
+    },
+    {
+      icon: TrendingUp,
+      tone: "blue",
+      tag: "Siap naik level",
+      text: `${seriesReadyCount} siswa telah menguasai rangkaian seri dan siap membuka rangkaian paralel.`,
+    },
+    insights[3],
+  ];
+
+  const dynamicTStats: Stat[] = [
+    tStats[0],
+    {
+      ...tStats[1],
+      value: `${classAvgMastery}%`,
+      sub: `+${Math.max(6, classAvgMastery - 62)}% bulan ini`,
+    },
+    tStats[2],
+    {
+      ...tStats[3],
+      value: String(138 + totalCompletedMods),
+    },
+  ];
 
   const filteredStudents = dynamicStudents.filter((st) =>
     st.name.toLowerCase().includes(studentQuery.toLowerCase()) ||
@@ -670,7 +751,7 @@ function TeacherOverview() {
     <div style={{ display: "grid", gap: 20 }}>
       {/* stat row */}
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
-        {tStats.map((s, i) => (
+        {dynamicTStats.map((s, i) => (
           <Card key={s.label} delay={i * 60} style={{ padding: 20 }}>
             <div className="flex items-center justify-between">
               <div style={{ width: 44, height: 44, borderRadius: 13, background: `${s.color}22`, display: "grid", placeItems: "center" }}>
@@ -728,7 +809,7 @@ function TeacherOverview() {
                 <tr><th scope="col">Minggu</th><th scope="col">Tingkat Penguasaan</th></tr>
               </thead>
               <tbody>
-                {masteryTrend.map((m) => (
+                {dynamicMasteryTrend.map((m) => (
                   <tr key={m.week}>
                     <td>Minggu {m.week.replace("M", "")}</td>
                     <td>{m.mastery} persen</td>
@@ -738,7 +819,7 @@ function TeacherOverview() {
             </table>
 
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={masteryTrend} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
+              <AreaChart data={dynamicMasteryTrend} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={C.primary} stopOpacity={0.38} />
@@ -793,7 +874,7 @@ function TeacherOverview() {
                 <tr><th scope="col">Konsep Sirkuit</th><th scope="col">Tingkat Penguasaan</th></tr>
               </thead>
               <tbody>
-                {skillRadar.map((s) => (
+                {dynamicSkillRadar.map((s) => (
                   <tr key={s.skill}>
                     <td>{s.skill}</td>
                     <td>{s.value} persen</td>
@@ -803,7 +884,7 @@ function TeacherOverview() {
             </table>
 
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={skillRadar} outerRadius="72%">
+              <RadarChart data={dynamicSkillRadar} outerRadius="72%">
                 <PolarGrid stroke="rgba(46,42,94,0.12)" />
                 <PolarAngleAxis dataKey="skill" tick={{ fill: C.textSoft, fontSize: 11.5, fontWeight: 600 }} />
                 <Radar dataKey="value" stroke={C.primaryDeep} strokeWidth={2.5} fill={C.primary} fillOpacity={0.35} />
@@ -849,7 +930,7 @@ function TeacherOverview() {
           }
         />
         <div style={{ display: "grid", gap: 13, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-          {insights.map((ins, i) => {
+          {dynamicInsights.map((ins, i) => {
             const tones: Record<string, [string, string]> = {
               warn: [C.pinkSoft, "#DB2777"], purple: [C.primarySoft, C.primaryDeep],
               blue: [C.blueSoft, "#0284C7"], green: [C.greenSoft, "#0F9D6B"],
@@ -1853,6 +1934,20 @@ function Sidebar({ view, setView, role, onLogout }: ShellProps) {
 function TopBar({ view, setView, role, name, onLogout }: ShellProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [studentXp, setStudentXp] = useState<number>(() => getStudentProgress().xp);
+
+  useEffect(() => {
+    const syncXp = () => setStudentXp(getStudentProgress().xp);
+    window.addEventListener("lentera-progress-update", syncXp);
+    window.addEventListener("lentera-active-student-update", syncXp);
+    window.addEventListener("storage", syncXp);
+    return () => {
+      window.removeEventListener("lentera-progress-update", syncXp);
+      window.removeEventListener("lentera-active-student-update", syncXp);
+      window.removeEventListener("storage", syncXp);
+    };
+  }, []);
+
   const nav: { id: string; label: string; icon: LucideIcon; href?: string }[] = [
     { id: "home", label: "Siswa", icon: LayoutDashboard },
     { id: "teacher-report", label: "Laporan Guru", icon: GraduationCap },
@@ -1861,7 +1956,13 @@ function TopBar({ view, setView, role, name, onLogout }: ShellProps) {
     { id: "lab", label: "Lab", icon: ScanEye, href: "/aruco" },
   ];
   const fallbackName = role === "student" ? "Via" : role === "parent" ? "Orang Tua / Wali" : "Guru";
-  const tag = role === "student" ? "Teknisi · Lv 2" : role === "parent" ? "Orang tua siswa" : "Guru Pendamping";
+  const studentLvTag =
+    studentXp >= 1000
+      ? "Insinyur · Lv 3"
+      : studentXp >= 500
+      ? "Teknisi · Lv 2"
+      : "Penjelajah · Lv 1";
+  const tag = role === "student" ? studentLvTag : role === "parent" ? "Orang tua siswa" : "Guru Pendamping";
   const person = { name: name || fallbackName, tag };
   return (
     <header

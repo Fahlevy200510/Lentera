@@ -505,18 +505,62 @@ export function buildStudentLearningNarration(
   };
 }
 
+export function computeStudentMasteryPercent(progress: StudentProgress): number {
+  const completedMods = [
+    progress.modules.component_recognition,
+    progress.modules.component_quiz,
+    progress.modules.series_circuit,
+    progress.modules.parallel_circuit,
+    progress.modules.circuit_troubleshoot,
+  ].filter(Boolean).length;
+  const skillSum =
+    progress.skills.battery +
+    progress.skills.cable +
+    progress.skills.switch +
+    progress.skills.flow +
+    progress.skills.series +
+    progress.skills.parallel; // max 30
+  const xpScore = Math.min(progress.xp, 1000) / 1000; // 0..1
+  const raw = Math.round(xpScore * 50 + (skillSum / 30) * 30 + completedMods * 4);
+  if (progress.xp >= 1000) return Math.min(100, Math.max(88, raw));
+  if (progress.xp >= 500) return Math.min(84, Math.max(62, raw));
+  return Math.min(54, Math.max(32, raw));
+}
+
 export function buildTeacherClassNarration(teacherName: string = "Bapak atau Ibu Guru") {
-  const briefing = `Selamat datang di Dashboard Guru LENTERA Learn, ${teacherName}. Ringkasan kelas hari ini: 19 dari 24 siswa aktif praktikum dengan rata-rata penguasaan materi kelas mencapai 68 persen. Tren pemahaman kelas terus meningkat positif sebesar 26 persen. Tekan tombol Analisis Kelas atau letakkan balok di sel A1 untuk mendengarkan rincian lengkap grafik kurva tren, profil radar keterampilan, dan status tiap siswa.`;
+  const viaProg = getStudentProgress("via");
+  const amiraProg = getStudentProgress("amira");
+  const luthfiProg = getStudentProgress("luthfi");
+  const viaMastery = computeStudentMasteryPercent(viaProg);
+  const amiraMastery = computeStudentMasteryPercent(amiraProg);
+  const luthfiMastery = computeStudentMasteryPercent(luthfiProg);
 
-  const trendNarration = `Analisis Grafik Tren Penguasaan Kelas: Pemahaman siswa menunjukkan tren kenaikan stabil sebesar 26 persen selama 6 minggu terakhir. Dimulai dari 42 persen pada Minggu 1, naik menjadi 48 persen di Minggu 2, 55 persen di Minggu 3, 61 persen di Minggu 4, 65 persen di Minggu 5, dan mencapai 68 persen pada Minggu 6. Arah kurva berstatus positif dan konsisten naik.`;
+  const allProgs = [viaProg, amiraProg, luthfiProg];
+  const avgSkill = (key: keyof StudentProgress["skills"], base: number) => {
+    const liveAvg = (allProgs.reduce((acc, p) => acc + p.skills[key] * 20, 0)) / allProgs.length;
+    return Math.min(100, Math.round(liveAvg * 0.6 + base * 0.4));
+  };
+  const batVal = avgSkill("battery", 90);
+  const cabVal = avgSkill("cable", 82);
+  const swVal = avgSkill("switch", 76);
+  const flowVal = avgSkill("flow", 54);
+  const serVal = avgSkill("series", 63);
+  const parVal = avgSkill("parallel", 38);
 
-  const radarNarration = `Analisis Radar Profil Keterampilan Kelas: Kemampuan tertinggi siswa berada pada konsep Baterai dengan nilai 90 persen dan Kabel 82 persen. Saklar berada di 76 persen dan Rangkaian Seri di 63 persen. Namun, konsep Aliran Arus berada di 54 persen karena miskonsepsi kutub, serta Rangkaian Paralel berada di angka terendah yaitu 38 persen. Topik rangkaian paralel sangat disarankan menjadi fokus bimbingan tatap muka berikutnya.`;
+  const classMastery = Math.round((viaMastery + amiraMastery + luthfiMastery + 72 + 64 + 38) / 6);
+  const seriesMasterCount = allProgs.filter((p) => p.modules.series_circuit).length + 1;
 
-  const insightsNarration = `Wawasan Diagnostik Cerdas Guru: Pertama, peringatan perangkat fisik, 82 persen siswa salah meletakkan kabel di terminal kanan karena tekstur taktil yang terlalu samar. Kedua, miskonsepsi kutub baterai masih dialami 6 siswa pada konsep aliran arus. Ketiga, tiga siswa telah menguasai rangkaian seri dan siap membuka modul rangkaian paralel.`;
+  const briefing = `Selamat datang di Dashboard Guru LENTERA Learn, ${teacherName}. Ringkasan kelas hari ini: 19 dari 24 siswa aktif praktikum dengan rata-rata penguasaan materi kelas mencapai ${classMastery} persen. Tekan tombol Analisis Kelas atau letakkan balok di sel A1 untuk mendengarkan rincian lengkap grafik kurva tren, profil radar keterampilan, dan status tiap siswa.`;
 
-  const studentsNarration = `Laporan Capaian Individu Siswa: Tiga siswa teratas berstatus siap naik level, yaitu Via 92 persen, Luthfi 85 persen, dan Amira 75 persen. Dua siswa sesuai target yaitu Lina 72 persen dan Kai 64 persen. Satu siswa memerlukan pendampingan khusus yaitu Bagas dengan nilai 38 persen.`;
+  const trendNarration = `Analisis Grafik Tren Penguasaan Kelas: Pemahaman siswa meningkat stabil selama 6 minggu terakhir. Dimulai dari 42 persen pada Minggu 1, 48 persen di Minggu 2, 55 persen di Minggu 3, 61 persen di Minggu 4, 65 persen di Minggu 5, dan kini mencapai ${classMastery} persen pada Minggu 6.`;
 
-  const fullAnalysis = `Laporan Lengkap Pembelajaran Kelas untuk ${teacherName}. Pertama, aktivitas kelas: Dari 24 siswa terdaftar, 19 siswa aktif praktikum hari ini dengan rata-rata penguasaan 68 persen, dan 142 sesi pelajaran telah tuntas minggu ini. Kedua, ${trendNarration} Ketiga, ${radarNarration} Keempat, ${studentsNarration} Kelima, ${insightsNarration} Untuk melihat dan mendengar Rapor Evaluasi AI per anak, letakkan kartu identitas siswa Via, Amira, atau Luthfi di sel C5, atau letakkan balok di sel A1 untuk kembali ke tampilan Progres Siswa.`;
+  const radarNarration = `Analisis Radar Profil Keterampilan Kelas: Penguasaan konsep Baterai berada di ${batVal} persen, Kabel ${cabVal} persen, Saklar ${swVal} persen, Rangkaian Seri ${serVal} persen, Aliran Arus ${flowVal} persen, dan Rangkaian Paralel ${parVal} persen.`;
+
+  const insightsNarration = `Wawasan Diagnostik Cerdas Guru: Pertama, peringatan perangkat fisik pada terminal kanan papan. Kedua, konsep aliran arus berada di ${flowVal} persen. Ketiga, ${seriesMasterCount} siswa telah menguasai rangkaian seri dan siap membuka modul rangkaian paralel.`;
+
+  const studentsNarration = `Laporan Capaian Individu Siswa Aktif: Via ${viaMastery} persen, Luthfi ${luthfiMastery} persen, dan Amira ${amiraMastery} persen. Siswa kelas lainnya: Lina 72 persen, Kai 64 persen, dan Bagas 38 persen.`;
+
+  const fullAnalysis = `Laporan Lengkap Pembelajaran Kelas untuk ${teacherName}. Pertama, rata-rata penguasaan kelas saat ini mencapai ${classMastery} persen. Kedua, ${trendNarration} Ketiga, ${radarNarration} Keempat, ${studentsNarration} Kelima, ${insightsNarration} Untuk melihat dan mendengar Rapor Evaluasi AI per anak, letakkan kartu identitas siswa Via, Amira, atau Luthfi di sel C5, atau letakkan balok di sel A1 untuk kembali ke tampilan Progres Siswa.`;
 
   return {
     briefing,
