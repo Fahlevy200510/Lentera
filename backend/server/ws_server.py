@@ -8,11 +8,17 @@ class WSServer:
         self.port = port
         self.clients = set()
         self._is_sending_frame = False
+        self.last_state_msg = None
         
     async def handler(self, websocket, path=None): # websockets 12.0 signature
         # Accept connection
         self.clients.add(websocket)
         print(f"[WS] Client connected. Total: {len(self.clients)}")
+        if self.last_state_msg:
+            try:
+                await websocket.send(self.last_state_msg)
+            except Exception:
+                pass
         try:
             # Tetap terhubung menunggu pesan dari client (jika ada)
             async for message in websocket:
@@ -77,10 +83,11 @@ class WSServer:
         """
         Fungsi broadcast untuk data teks sirkuit (prioritas tinggi).
         """
+        msg = json.dumps(message_dict)
+        if isinstance(message_dict, dict) and message_dict.get("type") == "grid_state":
+            self.last_state_msg = msg
         if not self.clients or not hasattr(self, 'loop'):
             return
-            
-        msg = json.dumps(message_dict)
         try:
             asyncio.run_coroutine_threadsafe(self._broadcast(msg), self.loop)
         except Exception as e:

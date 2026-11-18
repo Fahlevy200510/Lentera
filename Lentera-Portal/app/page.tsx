@@ -918,17 +918,17 @@ export default function PortalHome() {
                 return;
               }
 
-              // Catat posisi balok awal saat baru kembali ke Beranda (misal setelah Logout di E5) agar tidak langsung re-login
+              // Catat posisi balok di sel keluar E5 saat baru kembali ke Beranda setelah Logout agar tidak langsung re-login.
+              // Sel lain (termasuk A2-E2 seperti E2 untuk pilih kecepatan langsung) TIDAK boleh diblokir walaupun balok ditaruh cepat sebelum paket WS pertama tiba.
               if (initialSnapshotCells === null) {
                 initialSnapshotCells = {};
-                for (const [k, v] of Object.entries(data.cells)) {
-                  if (v && typeof v === "object") {
-                    const obj = v as { component?: string; id?: number };
-                    initialSnapshotCells[k] = `${obj.component || ""}_${obj.id ?? ""}`;
+                const e5Val = data.cells["E5"];
+                if (e5Val && typeof e5Val === "object") {
+                  const obj = e5Val as { component?: string; id?: number };
+                  initialSnapshotCells["E5"] = `${obj.component || ""}_${obj.id ?? ""}`;
+                  if (allPlacedCount === 1) {
+                    return;
                   }
-                }
-                if (Object.keys(initialSnapshotCells).length > 0) {
-                  return;
                 }
               } else {
                 for (const k of Object.keys(initialSnapshotCells)) {

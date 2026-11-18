@@ -84,10 +84,22 @@ export function markTunnelDead(endpoint: string) {
   if (endpoint && endpoint !== "localhost" && endpoint !== "127.0.0.1") {
     deadTunnelsInSession.add(endpoint.replace(/^https?:\/\//, "").replace(/^wss?:\/\//, "").replace(/\/$/, ""));
   }
+  try {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("lentera_cached_tunnel");
+      sessionStorage.removeItem("lentera_cached_tunnel_ts");
+    }
+  } catch { }
 }
 
 export function clearDeadTunnels() {
   deadTunnelsInSession.clear();
+  try {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("lentera_cached_tunnel");
+      sessionStorage.removeItem("lentera_cached_tunnel_ts");
+    }
+  } catch { }
 }
 
 /**
@@ -103,13 +115,19 @@ export async function getActiveLenteraEndpoint(): Promise<string> {
       if (mode === "manual" && saved) {
         return saved;
       }
+      // Gunakan cache tunnel sesi (60 detik) agar koneksi WebSocket di Landing Page & Lab langsung instan (<50ms)
+      const cachedTunnel = sessionStorage.getItem("lentera_cached_tunnel");
+      const cachedTs = Number(sessionStorage.getItem("lentera_cached_tunnel_ts") || 0);
+      if (cachedTunnel && Date.now() - cachedTs < 60000 && !deadTunnelsInSession.has(cachedTunnel)) {
+        return cachedTunnel;
+      }
     }
   } catch { }
 
   // 1. Prioritas Mode Auto: Auto-discovery Cloudflare Quick Tunnel dari ntfy relay
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
     const res = await fetch(`https://ntfy.sh/lentera_malaysia_edge_tunnel/raw?poll=1&_t=${Date.now()}`, {
       signal: controller.signal,
       cache: "no-store",
@@ -129,6 +147,12 @@ export async function getActiveLenteraEndpoint(): Promise<string> {
       if (latest) {
         const cleanLatest = latest.replace(/^https?:\/\//, "").replace(/\/$/, "");
         if (!deadTunnelsInSession.has(cleanLatest)) {
+          try {
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("lentera_cached_tunnel", cleanLatest);
+              sessionStorage.setItem("lentera_cached_tunnel_ts", String(Date.now()));
+            }
+          } catch { }
           return cleanLatest;
         }
       }

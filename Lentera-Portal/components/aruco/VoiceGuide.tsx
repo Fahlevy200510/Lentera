@@ -1024,11 +1024,11 @@ export default function VoiceGuide() {
       const placedCount = Object.values(cells).filter(Boolean).length;
       setBoardBlockCount(placedCount);
 
-      // Catat snapshot balok/kartu awal saat baru masuk /aruco agar kartu login dari Beranda tidak memicu redirect palsu
+      // Catat snapshot kartu identitas awal di A1/E5 saat baru masuk /aruco agar kartu sisa login tidak memicu redirect palsu
       if (initialCellsRef.current === null) {
         initialCellsRef.current = {};
         for (const [k, v] of Object.entries(cells)) {
-          if (v && typeof v === "object") {
+          if (v && typeof v === "object" && isStudentToken(v)) {
             const obj = v as { component?: string; id?: number };
             initialCellsRef.current[k] = `${obj.component || ""}_${obj.id ?? ""}`;
           }
@@ -1170,8 +1170,8 @@ export default function VoiceGuide() {
       // KETIKA SEDANG MODE IDLE (TANGIBLE GRID MENU A1 - E1, A5, C5)
       if (mode === "idle") {
         if (idleMenuHandledRef.current) return;
-        // Tahan deteksi menu 2.5s awal saat baru masuk lab agar tidak memotong intro dan tidak salah baca balok lama
-        if (Date.now() - mountTimeRef.current < 2500) return;
+        // Tahan deteksi menu 0.8s awal saat baru masuk lab agar transisi halaman stabil
+        if (Date.now() - mountTimeRef.current < 800) return;
 
         if (ignoreIdleMenuUntilLiftRef.current) {
           // Masih ada balok sisa sesi sebelumnya: ingatkan angkat semua balok (sekali tiap 7.5s)
