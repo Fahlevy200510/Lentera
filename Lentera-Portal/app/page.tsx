@@ -660,7 +660,7 @@ export default function PortalHome() {
     } | null = null;
     let speedTimer: ReturnType<typeof setTimeout> | null = null;
     let initialSnapshotCells: Record<string, string> | null = null;
-    let awaitingLiftTarget: { url: string; label: string; rate: number } | null = null;
+    let awaitingLiftTarget: { url: string; label: string; rate: number; slot?: string } | null = null;
     let lastLiftRemindTime = 0;
     let latestPlacedTotal = 0;
     let promptFinishedForDefaultSpeed = false;
@@ -821,14 +821,20 @@ export default function PortalHome() {
           "38": "Kartu Identitas Guru",
         };
 
-        const requestLiftThenNavigate = (url: string, label: string, speechText: string, rate: number) => {
+        const requestLiftThenNavigate = (
+          url: string,
+          label: string,
+          speechText: string,
+          rate: number,
+          slot?: string
+        ) => {
           if (redirected) return;
           if (speedTimer) {
             clearTimeout(speedTimer);
             speedTimer = null;
           }
           awaitingSpeedStudent = null;
-          awaitingLiftTarget = { url, label, rate };
+          awaitingLiftTarget = { url, label, rate, slot };
           isRedirectingRef.current = true;
           lastLiftRemindTime = Date.now();
           speakNarration(speechText, {
@@ -880,7 +886,7 @@ export default function PortalHome() {
                       break;
                     }
                   }
-                  if (overrideSlot) {
+                  if (overrideSlot && overrideSlot !== awaitingLiftTarget.slot) {
                     const chosen = SPEED_MODES[overrideSlot];
                     cancelSpeech();
                     playEarcon("step");
@@ -891,8 +897,8 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: overrideSlot,
                     });
-                    const confirmText = `Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
-                    requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
+                    const confirmText = `Mode ${chosen.name} aktif. Angkat balok untuk masuk ke LENTERA Lab.`;
+                    requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate, overrideSlot);
                     return;
                   }
                 }
@@ -910,7 +916,7 @@ export default function PortalHome() {
                     lastLiftRemindTime = now;
                     playEarcon("clue");
                     speakNarration(
-                      `Silakan angkat kartu dari papan untuk membuka ${awaitingLiftTarget.label}.`,
+                      `Silakan angkat balok dari papan untuk masuk ke ${awaitingLiftTarget.label}.`,
                       { rate: awaitingLiftTarget.rate, pitch: 1.02, tag: "landing-lift-remind" }
                     );
                   }
@@ -962,8 +968,8 @@ export default function PortalHome() {
                     selectedSlot: chosenSlot,
                   });
 
-                  const confirmText = `Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
-                  requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
+                  const confirmText = `Mode ${chosen.name} aktif. Angkat balok untuk masuk ke LENTERA Lab.`;
+                  requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate, chosenSlot);
                   return;
                 }
 
@@ -1085,8 +1091,8 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: detectedUserCell,
                     });
-                    const speechText = `Halo ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
-                    requestLiftThenNavigate("/aruco", "LENTERA Lab", speechText, chosen.rate);
+                    const speechText = `Halo ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Angkat balok untuk masuk ke LENTERA Lab.`;
+                    requestLiftThenNavigate("/aruco", "LENTERA Lab", speechText, chosen.rate, detectedUserCell);
                     return;
                   }
 
@@ -1106,7 +1112,7 @@ export default function PortalHome() {
                     currentMode: currentMode,
                   });
 
-                  const promptText = `Halo ${detectedUserMeta.name}! Mode suara: ${currentMode}. Geser kartu ke baris 2 untuk ubah kecepatan, atau angkat kartu untuk masuk Lab.`;
+                  const promptText = `Halo ${detectedUserMeta.name}! Mode suara: ${currentMode}. Geser ke baris 2 untuk ubah kecepatan, atau angkat balok untuk masuk ke LENTERA Lab.`;
 
                   const promptLiftForDefaultSpeed = () => {
                     if (redirected || awaitingLiftTarget) return;
@@ -1129,7 +1135,7 @@ export default function PortalHome() {
                       requestLiftThenNavigate(
                         "/aruco",
                         "LENTERA Lab",
-                        `Mode ${currentMode} aktif. Angkat kartu untuk masuk Lab.`,
+                        `Mode ${currentMode} aktif. Angkat balok untuk masuk ke LENTERA Lab.`,
                         currentRate
                       );
                     }
