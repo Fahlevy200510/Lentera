@@ -910,15 +910,15 @@ export default function VoiceGuide() {
 
         let promptMessage = `Siswa bernama ${sName} sedang merakit rangkaian bebas di lab dan meminta umpan balik. Komponen terpasang saat ini: ${placedSummary}.`;
         if (status === "polarity_reversed") {
-          promptMessage += ` PERINGATAN SENSOR: Polaritas lampu LED terbalik (polarity_reversed), sedangkan jalur kabel sudah tertutup. Jawab singkat maksimal 2 kalimat: minta siswa meraba kubah bundar lampu tersebut lalu memutar posisinya 180 derajat.`;
+          promptMessage += ` PERINGATAN SENSOR: Polaritas lampu LED terbalik (polarity_reversed), sedangkan jalur kabel sudah tertutup. Jawab dalam 2–3 kalimat: minta siswa meraba kubah bundar lampu tersebut lalu memutar bloknya 180 derajat.`;
         } else if (status === "switch_off") {
-          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar masih OFF. Jawab singkat maksimal 2 kalimat: minta siswa meraba tuas saklar geser lalu menggeser/memutarnya 90 derajat ke posisi ON.`;
+          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar masih OFF. Jawab dalam 2–3 kalimat: minta siswa meraba balok saklar (berbentuk saklar geser timbul di atasnya) lalu memutar blok saklar tersebut 90 derajat dari posisi sekarang ke posisi ON.`;
         } else if (status === "short_circuit") {
-          promptMessage += ` PERINGATAN BAHAYA: Korsleting arus pendek tanpa beban! Jawab singkat maksimal 2 kalimat: minta siswa segera melepas kabel atau memasang lampu.`;
+          promptMessage += ` PERINGATAN BAHAYA: Korsleting arus pendek tanpa beban! Jawab dalam 2–3 kalimat: minta siswa segera melepas kabel atau memasang lampu.`;
         } else if (status === "success") {
-          promptMessage += ` STATUS: Rangkaian berhasil menyala! Berikan apresiasi singkat 1–2 kalimat.`;
+          promptMessage += ` STATUS: Rangkaian berhasil menyala! Berikan apresiasi hangat dalam 2–3 kalimat.`;
         } else {
-          promptMessage += ` Status sirkuit: ${status}. Berikan bimbingan taktil singkat 1–2 kalimat untuk menyambungkan rangkaian tertutup.`;
+          promptMessage += ` Status sirkuit: ${status}. Berikan bimbingan taktil ramah dalam 2–3 kalimat untuk menyambungkan rangkaian tertutup.`;
         }
 
         const res = await fetch("/api/tutor", {
