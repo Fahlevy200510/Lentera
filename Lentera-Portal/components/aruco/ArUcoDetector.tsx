@@ -228,7 +228,7 @@ export default function ArUcoDetector() {
         setDetections((prev) => ({ ...prev, status: "connected" }));
         manualDisconnectRef.current = false;
         reconnectCountRef.current = 0;
-        showToast(isTunnel ? "Terhubung ke LENTERA Edge (Cloud Tunnel)" : "Terhubung ke LENTERA Lokal");
+        showToast("Terhubung ke Perangkat LENTERA Edge");
       };
 
       websocket.onmessage = (event) => {
@@ -454,9 +454,6 @@ export default function ArUcoDetector() {
             <div className="min-w-0 truncate">
               <span className="text-[11.5px] font-extrabold text-[#1D1836]">
                 {STATUS_LABEL[detections.status]}
-              </span>
-              <span className="ml-1 text-[10px] text-[#6E659F] font-semibold">
-                ({resolved.displayHost})
               </span>
             </div>
           </div>
