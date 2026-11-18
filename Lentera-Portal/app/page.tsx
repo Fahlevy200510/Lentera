@@ -440,6 +440,7 @@ export default function PortalHome() {
   const [customIpInput, setCustomIpInput] = useState<string>("");
   const lastHeartbeatRef = useRef<number>(0);
   const wsInstanceRef = useRef<WebSocket | null>(null);
+  const reconnectNowRef = useRef<(() => void) | null>(null);
   const [session, setSession] = useState<{ name: string; role: string } | null>(
     null
   );
@@ -667,6 +668,7 @@ export default function PortalHome() {
     let wasBoardEmptyDuringSpeedChoice = false;
 
     let retryAttempt = 0;
+    let connectSeq = 0;
 
     const scheduleReconnect = () => {
       if (cancelled || redirected) return;
@@ -681,30 +683,52 @@ export default function PortalHome() {
     };
 
     async function initBackgroundWS() {
+      const mySeq = ++connectSeq;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (ws) {
+        const oldWs = ws;
+        oldWs.onopen = null;
+        oldWs.onmessage = null;
+        oldWs.onclose = null;
+        oldWs.onerror = null;
+        try {
+          oldWs.close();
+        } catch {}
+        ws = null;
+      }
+      setWsConnected(false);
+      setCameraReady(false);
+
       try {
         const savedMode = localStorage.getItem("lentera_endpoint_mode");
         setActiveConnMode(savedMode === "manual" ? "manual" : "auto");
       } catch {}
       const endpoint = await getActiveLenteraEndpoint();
-      if (cancelled || redirected) return;
+      if (cancelled || redirected || mySeq !== connectSeq) return;
 
       const { wsUrl, isTunnel, displayHost } = resolveEndpoints(endpoint);
       setActiveEndpoint(displayHost || endpoint);
-      setCustomIpInput((prev) => prev || displayHost || endpoint);
+      setCustomIpInput(displayHost || endpoint);
       console.log("[LENTERA Auto-Redirect WS] Menghubungkan ke:", wsUrl);
 
       try {
-        ws = new WebSocket(wsUrl);
-        wsInstanceRef.current = ws;
+        const socket = new WebSocket(wsUrl);
+        ws = socket;
+        wsInstanceRef.current = socket;
         let opened = false;
-        ws.onopen = () => {
+        socket.onopen = () => {
+          if (mySeq !== connectSeq) return;
           opened = true;
           retryAttempt = 0;
           lastHeartbeatRef.current = Date.now();
           console.log("[LENTERA Auto-Redirect WS] Terhubung ke papan fisik!");
           setWsConnected(true);
         };
-        ws.onclose = () => {
+        socket.onclose = () => {
+          if (mySeq !== connectSeq) return;
           setWsConnected(false);
           setCameraReady(false);
           if (!opened && isTunnel) {
@@ -712,11 +736,12 @@ export default function PortalHome() {
           }
           scheduleReconnect();
         };
-        ws.onerror = () => {
+        socket.onerror = () => {
+          if (mySeq !== connectSeq) return;
           setWsConnected(false);
           setCameraReady(false);
           try {
-            ws?.close();
+            socket.close();
           } catch { }
         };
         const USER_TOKENS: Record<
@@ -1181,6 +1206,11 @@ export default function PortalHome() {
       }
     }
 
+    reconnectNowRef.current = () => {
+      retryAttempt = 0;
+      initBackgroundWS();
+    };
+
     initBackgroundWS();
 
     // Watchdog anti-mati saat alat sudah dinyalakan 30 menit sebelum presentasi:
@@ -1609,9 +1639,7 @@ export default function PortalHome() {
                           setLivePreviewFrame(null);
                           setCalibNotice("Beralih ke Otomatis (Mencari Tunnel Raspberry Pi)...");
                           setTimeout(() => setCalibNotice(null), 2500);
-                          try {
-                            wsInstanceRef.current?.close();
-                          } catch {}
+                          reconnectNowRef.current?.();
                         }}
                         className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition border ${
                           activeConnMode === "auto"
@@ -1635,9 +1663,7 @@ export default function PortalHome() {
                           setLivePreviewFrame(null);
                           setCalibNotice("Beralih ke Kamera Lokal Laptop (Localhost)...");
                           setTimeout(() => setCalibNotice(null), 2500);
-                          try {
-                            wsInstanceRef.current?.close();
-                          } catch {}
+                          reconnectNowRef.current?.();
                         }}
                         className={`rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold transition border ${
                           activeConnMode === "manual" &&
@@ -1664,9 +1690,7 @@ export default function PortalHome() {
                         setLivePreviewFrame(null);
                         setCalibNotice(`Menghubungkan ke ${targetVal}...`);
                         setTimeout(() => setCalibNotice(null), 2500);
-                        try {
-                          wsInstanceRef.current?.close();
-                        } catch {}
+                        reconnectNowRef.current?.();
                       }}
                       className="flex items-center gap-1.5 pt-0.5"
                     >

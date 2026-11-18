@@ -143,18 +143,18 @@ export async function getActiveLenteraEndpoint(): Promise<string> {
       const validTunnels = lines.filter(
         (l) => l.includes("trycloudflare.com") && !l.includes("api.trycloudflare.com")
       );
-      const latest = validTunnels[validTunnels.length - 1];
-      if (latest) {
-        const cleanLatest = latest.replace(/^https?:\/\//, "").replace(/\/$/, "");
-        if (!deadTunnelsInSession.has(cleanLatest)) {
-          try {
-            if (typeof window !== "undefined") {
-              sessionStorage.setItem("lentera_cached_tunnel", cleanLatest);
-              sessionStorage.setItem("lentera_cached_tunnel_ts", String(Date.now()));
-            }
-          } catch { }
-          return cleanLatest;
-        }
+      const latestLive = [...validTunnels]
+        .reverse()
+        .map((l) => l.replace(/^https?:\/\//, "").replace(/\/$/, ""))
+        .find((clean) => !deadTunnelsInSession.has(clean));
+      if (latestLive) {
+        try {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("lentera_cached_tunnel", latestLive);
+            sessionStorage.setItem("lentera_cached_tunnel_ts", String(Date.now()));
+          }
+        } catch { }
+        return latestLive;
       }
     }
   } catch { }
@@ -186,6 +186,7 @@ export default function ArUcoDetector() {
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const reconnectCountRef = useRef(0);
+  const connectReqIdRef = useRef(0);
   const manualDisconnectRef = useRef(false);
   const lastNarrationRef = useRef<string>("");
   const lastNarrationTimeRef = useRef<number>(0);
@@ -298,12 +299,15 @@ export default function ArUcoDetector() {
           const delay = Math.min(3000 * Math.pow(1.6, reconnectCountRef.current), 10000);
           reconnectCountRef.current += 1;
           reconnectTimerRef.current = setTimeout(async () => {
+            const reqId = ++connectReqIdRef.current;
             try {
               const freshEndpoint = await getActiveLenteraEndpoint();
+              if (reqId !== connectReqIdRef.current || manualDisconnectRef.current) return;
               setEndpoint(freshEndpoint);
               setCustomInput(freshEndpoint);
               connectWebSocket(freshEndpoint);
             } catch {
+              if (reqId !== connectReqIdRef.current || manualDisconnectRef.current) return;
               connectWebSocket(targetEndpoint);
             }
           }, delay);
@@ -328,8 +332,9 @@ export default function ArUcoDetector() {
     } catch { }
 
     async function autoDiscoverAndConnect() {
+      const reqId = ++connectReqIdRef.current;
       const targetEndpoint = await getActiveLenteraEndpoint();
-      if (!cancelled) {
+      if (!cancelled && reqId === connectReqIdRef.current) {
         setEndpoint(targetEndpoint);
         setCustomInput(targetEndpoint);
         connectWebSocket(targetEndpoint);
@@ -353,24 +358,31 @@ export default function ArUcoDetector() {
   const handleManualConnect = (newEndpoint: string) => {
     const clean = newEndpoint.trim();
     if (!clean) return;
+    connectReqIdRef.current += 1;
     manualDisconnectRef.current = false;
     reconnectCountRef.current = 0;
     setLiveFrame(null);
+    setDetections({ cells: {}, status: "connecting" });
     setEndpoint(clean);
     setCustomInput(clean);
     setEndpointMode("manual");
     try {
       localStorage.setItem("lentera_endpoint_mode", "manual");
       localStorage.setItem("lentera_edge_endpoint", clean);
+      localStorage.setItem("lentera_endpoint", clean);
+      sessionStorage.removeItem("lentera_cached_tunnel");
+      sessionStorage.removeItem("lentera_cached_tunnel_ts");
     } catch { }
     connectWebSocket(clean);
   };
 
   const handleResetToAuto = async () => {
+    const reqId = ++connectReqIdRef.current;
     manualDisconnectRef.current = false;
     reconnectCountRef.current = 0;
     clearDeadTunnels();
     setLiveFrame(null);
+    setDetections({ cells: {}, status: "connecting" });
     setEndpointMode("auto");
     try {
       localStorage.setItem("lentera_endpoint_mode", "auto");
@@ -378,17 +390,19 @@ export default function ArUcoDetector() {
       localStorage.removeItem("lentera_endpoint");
     } catch { }
     showToast("Mendeteksi Cloudflare Tunnel otomatis...");
-    setDetections((prev) => ({ ...prev, status: "connecting" }));
     const target = await getActiveLenteraEndpoint();
+    if (reqId !== connectReqIdRef.current) return;
     setEndpoint(target);
     setCustomInput(target);
     connectWebSocket(target);
   };
 
   const handleDisconnect = () => {
+    connectReqIdRef.current += 1;
     manualDisconnectRef.current = true;
     if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     if (wsRef.current) {
+      wsRef.current.onclose = null;
       wsRef.current.close();
       wsRef.current = null;
     }
@@ -458,14 +472,20 @@ export default function ArUcoDetector() {
             ) : (
               <button
                 onClick={async () => {
+                  const reqId = ++connectReqIdRef.current;
                   manualDisconnectRef.current = false;
                   reconnectCountRef.current = 0;
+                  if (endpointMode === "auto") {
+                    clearDeadTunnels();
+                  }
                   try {
                     const freshEndpoint = await getActiveLenteraEndpoint();
+                    if (reqId !== connectReqIdRef.current) return;
                     setEndpoint(freshEndpoint);
                     setCustomInput(freshEndpoint);
                     connectWebSocket(freshEndpoint);
                   } catch {
+                    if (reqId !== connectReqIdRef.current) return;
                     connectWebSocket(endpoint);
                   }
                 }}
