@@ -826,17 +826,17 @@ export default function VoiceGuide() {
     const activeStudent = getActiveStudent();
     const sName = activeStudent?.name || "Siswa";
 
-    const intro = prefixText || "Pilihan istirahat ke Menu Utama diterima! Silakan angkat kembali balok dari E1.";
+    const intro = prefixText || "Kembali ke Menu Utama. Angkat balok dari E1.";
 
     if (!recDone) {
       speak(
-        `${intro} Papan siap digunakan. Silakan mulai Tahap 1 Pengenalan Bentuk Taktil dengan meletakkan satu balok di kotak A1 sudut kiri bawah.`
+        `${intro} Taruh satu balok di A1 untuk mulai Tahap 1 Pengenalan Komponen.`
       );
       return;
     }
 
     speak(
-      `${intro} Papan siap digunakan. Karena kamu sudah menguasai pengenalan komponen, seluruh fitur mandiri kini sudah terbuka untukmu: Di baris bawah papan yang paling dekat denganmu, letakkan balok di kotak A1 untuk mengulang Pengenalan Komponen, di B1 untuk Kuis Taktil, di C1 untuk Rangkaian Seri, di D1 untuk Rangkaian Paralel, dan di E1 untuk Tantangan Detektif Sirkuit. Di baris atas: letakkan balok di sudut kiri atas A5 untuk Tanya AI Tutor lewat suara, atau di tengah atas C5 untuk Mode Eksplorasi Bebas. Kamu juga bisa meletakkan kartu identitasmu di sel A1 sudut kiri bawah untuk membuka LENTERA Learn dan melihat nilaimu, atau di sel E5 sudut kanan atas untuk keluar sesi. Silakan raba papan dan letakkan balok di fitur yang kamu pilih!`
+      `${intro} Semua fitur terbuka: baris bawah A1 Pengenalan, B1 Kuis, C1 Seri, D1 Paralel, E1 Detektif; baris atas A5 Tanya AI Tutor dan C5 Eksplorasi Bebas.`
     );
   }, [speak]);
 
@@ -1084,7 +1084,7 @@ export default function VoiceGuide() {
           if (now - lastLiftRemindRef.current > 7500 && !isSpeakingRef.current) {
             lastLiftRemindRef.current = now;
             playEarcon("clue");
-            speak("Silakan angkat balok dari kotak sudut kiri atas A5 untuk membuka Tanya AI Tutor.");
+            speak("Silakan angkat balok dari A5 untuk membuka Tanya AI Tutor.");
           }
         }
         return;
@@ -1142,8 +1142,8 @@ export default function VoiceGuide() {
           };
           lastLiftRemindRef.current = Date.now();
           const speechText = isTeacher
-            ? `Kartu identitas guru terdeteksi di sel A1. Silakan angkat semua balok dari papan untuk membuka Dashboard Guru LENTERA Learn.`
-            : `Kartu identitas ${sName} terdeteksi di sel A1. Silakan angkat semua balok dari papan untuk membuka LENTERA Learn.`;
+            ? `Kartu guru di A1. Angkat balok untuk membuka Dashboard Guru.`
+            : `Kartu ${sName} di A1. Angkat balok untuk membuka LENTERA Learn.`;
           speak(speechText);
           return;
         }
@@ -1160,8 +1160,8 @@ export default function VoiceGuide() {
           };
           lastLiftRemindRef.current = Date.now();
           const speechText = isTeacher
-            ? `Kartu identitas guru terdeteksi di sel keluar E5. Sesi mengajar selesai. Silakan angkat semua balok dari papan untuk keluar ke Beranda.`
-            : `Kartu identitas ${sName} terdeteksi di sel keluar E5. Sesi belajar ${sName} selesai. Silakan angkat semua balok dari papan untuk keluar ke Beranda.`;
+            ? `Sesi mengajar selesai. Angkat kartu dari E5 untuk keluar.`
+            : `Sesi ${sName} selesai. Angkat kartu dari E5 untuk keluar.`;
           speak(speechText);
           return;
         }
@@ -1179,12 +1179,16 @@ export default function VoiceGuide() {
           if (now - lastLiftRemindRef.current > 7500 && !isCurrentlySpeaking) {
             lastLiftRemindRef.current = now;
             playEarcon("clue");
-            speak("Silakan angkat semua balok dari papan terlebih dahulu, lalu letakkan satu balok di pilihan menu yang kamu inginkan.");
+            speak("Angkat semua balok dari papan terlebih dahulu, lalu pilih fitur.");
           }
           return;
         }
 
-        if (placedCount === 1 && !isSpeakingRef.current && !isSpeakingAudio() && !(window as any).__lenteraSpeaking) {
+        const activeCellEntry = placedCount === 1 ? Object.entries(cells).find(([, v]) => Boolean(v)) : null;
+        const activeCellName = activeCellEntry?.[0] || null;
+        const isFreshMenuBlock = Boolean(activeCellName && !initialCellsRef.current?.[activeCellName]);
+
+        if (placedCount === 1 && !isSpeakingRef.current && (isFreshMenuBlock || (!isSpeakingAudio() && !(window as any).__lenteraSpeaking))) {
           const now = Date.now();
           if (now - lastMenuSelectRef.current > 3500) {
             const currentProgress = getStudentProgress();
@@ -1244,7 +1248,7 @@ export default function VoiceGuide() {
               pendingTabSwitchRef.current = "tutor";
               lastLiftRemindRef.current = now;
               speak(
-                "Pilihan diterima: Membuka Tanya AI Tutor. Silakan angkat balok dari kotak sudut kiri atas A5 untuk mulai bertanya lewat suara."
+                "Membuka Tanya AI Tutor. Angkat balok dari A5."
               );
             } else if (cells["C5"]) {
               // Mode Eksplorasi Bebas (Lab Terbuka) (Tengah Atas)
@@ -1410,7 +1414,7 @@ export default function VoiceGuide() {
             pendingTabSwitchRef.current = "tutor";
             lastLiftRemindRef.current = Date.now();
             speak(
-              "Pilihan diterima: Membuka Tanya AI Tutor. Silakan angkat balok dari kotak sudut kiri atas A5 untuk mulai bertanya lewat suara."
+              "Membuka Tanya AI Tutor. Angkat balok dari A5."
             );
           }
           return;
@@ -2111,7 +2115,7 @@ export default function VoiceGuide() {
       setBoardBlockCount(0);
       setIsExpanded(true);
       speak(
-        "Selamat datang di Mode Eksplorasi Bebas LENTERA! Seluruh 25 kotak dari A1 sampai E5 bebas kamu gunakan untuk menyusun balok rangkaian tanpa gangguan. AI Tutor hanya akan memberikan umpan balik ketika kamu memintanya: cukup letakkan kartu identitasmu di sudut kiri atas A5 atau tekan tombol Minta Bimbingan AI kapan saja. Untuk kembali ke menu utama, letakkan kartu identitasmu di sudut kanan bawah E1."
+        "Mode Eksplorasi Bebas siap! Silakan merangkai di papan; taruh kartu di A5 untuk bimbingan AI atau di E1 untuk kembali."
       );
       return;
     }
@@ -2176,7 +2180,7 @@ export default function VoiceGuide() {
     lastLiftRemindRef.current = Date.now();
     playEarcon("click");
     const moduleName = MODULE_TITLES[guideMode] || "modul pembelajaran";
-    speak(`Pilihan diterima: ${moduleName}! Silakan angkat semua balok dari papan fisik agar papan bersih untuk memulai.`);
+    speak(`Membuka ${moduleName}. Angkat balok dari papan untuk mulai.`);
   };
 
   useEffect(() => {

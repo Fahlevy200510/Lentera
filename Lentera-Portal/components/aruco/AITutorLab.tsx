@@ -98,7 +98,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
     cancelSpeech();
     playEarcon("click");
     speakNarration(
-      "Selamat datang di Tanya AI Tutor! Susun rangkaianmu di papan, lalu taruh satu balok di A1 untuk bicara dan angkat kembali saat selesai agar AI langsung menjawab. Untuk kembali ke panduan modul, kosongkan papan dan taruh satu balok di E5.",
+      "Tanya AI Tutor siap! Susun rangkaianmu di papan, lalu taruh balok di A1 untuk bicara dan angkat saat selesai.",
       {
         tag: "ai-tutor-lab-intro",
         rate: getSavedSpeechRate(),
@@ -501,7 +501,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           playEarcon("clear");
           const sName = getStudentNameFromToken(cellE5);
           localStorage.removeItem("lentera-session");
-          const speechText = `Kartu identitas ${sName} terdeteksi di sel keluar E5. Sesi belajar selesai. Sampai jumpa!`;
+          const speechText = `Sesi ${sName} selesai. Sampai jumpa!`;
           let navigated = false;
           const doNavigate = () => {
             if (navigated) return;
@@ -510,7 +510,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
             window.location.href = "/";
           };
 
-          const fallbackDelay = Math.max(10000, speechText.length * 95 + 3500);
+          const fallbackDelay = Math.max(4000, speechText.length * 80 + 2000);
           const navTimer = setTimeout(doNavigate, fallbackDelay);
 
           speakNarration(speechText, {

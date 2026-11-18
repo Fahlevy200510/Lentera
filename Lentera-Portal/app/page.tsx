@@ -586,7 +586,7 @@ export default function PortalHome() {
     }
 
     const text =
-      "Selamat datang di LENTERA, media belajar rangkaian listrik taktil dan suara. Silakan letakkan kartu identitasmu di atas papan fisik untuk memulai.";
+      "Selamat datang di LENTERA. Silakan letakkan kartu identitasmu di papan untuk memulai.";
 
     speakingRef.current = true;
     setSpeaking(true);
@@ -891,7 +891,7 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: overrideSlot,
                     });
-                    const confirmText = `Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
+                    const confirmText = `Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
                     requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
                     return;
                   }
@@ -962,7 +962,7 @@ export default function PortalHome() {
                     selectedSlot: chosenSlot,
                   });
 
-                  const confirmText = `Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
+                  const confirmText = `Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
                   requestLiftThenNavigate("/aruco", "LENTERA Lab", confirmText, chosen.rate);
                   return;
                 }
@@ -975,8 +975,8 @@ export default function PortalHome() {
                     // Balok sudah diangkat dari kotak asal! Segera batalkan timer konfirmasi kotak asal.
                     if (speedTimer) clearTimeout(speedTimer);
 
-                    // Berikan waktu leluasa 10 detik bagi tangan siswa untuk meraba dan meletakkan balok di A2-E2.
-                    // Jika selama 10 detik papan tetap kosong (tidak ditaruh di A2-E2), barulah masuk Lab dengan kecepatan saat ini.
+                    // Berikan waktu 3.5 detik bagi tangan siswa untuk memindahkan balok ke A2-E2.
+                    // Jika papan tetap kosong (tidak ditaruh di A2-E2), langsung masuk Lab dengan kecepatan saat ini.
                     const savedRate = getSavedSpeechRate();
                     const savedEntry = Object.entries(SPEED_MODES).find(
                       ([, cfg]) => Math.abs(cfg.rate - savedRate) < 0.05
@@ -989,7 +989,7 @@ export default function PortalHome() {
                         isRedirectingRef.current = true;
                         playEarcon("clear");
                         speakNarration(
-                          `Mode ${savedModeName} aktif. Membuka LENTERA Lab.`,
+                          `Membuka LENTERA Lab.`,
                           {
                             rate: savedRate,
                             pitch: 1.02,
@@ -997,9 +997,9 @@ export default function PortalHome() {
                             onEnd: () => router.push("/aruco"),
                           }
                         );
-                        setTimeout(() => router.push("/aruco"), 2400);
+                        setTimeout(() => router.push("/aruco"), 1800);
                       }
-                    }, 10000);
+                    }, 3500);
                   }
                 } else {
                   wasBoardEmptyDuringSpeedChoice = false;
@@ -1053,7 +1053,7 @@ export default function PortalHome() {
                       grade: detectedUserMeta.grade,
                     })
                   );
-                  const speechText = `Halo Bapak atau Ibu Guru! Silakan angkat kartu untuk membuka Dashboard Guru.`;
+                  const speechText = `Halo Bapak Ibu Guru! Angkat kartu untuk membuka Dashboard.`;
                   requestLiftThenNavigate("/dashboard", "Dashboard Guru LENTERA Learn", speechText, 1.0);
                   return;
                 }
@@ -1085,7 +1085,7 @@ export default function PortalHome() {
                       selectedMode: chosen.name,
                       selectedSlot: detectedUserCell,
                     });
-                    const speechText = `Halo ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`;
+                    const speechText = `Halo ${detectedUserMeta.name}! Mode ${chosen.name} aktif. Angkat kartu untuk masuk Lab.`;
                     requestLiftThenNavigate("/aruco", "LENTERA Lab", speechText, chosen.rate);
                     return;
                   }
@@ -1106,7 +1106,7 @@ export default function PortalHome() {
                     currentMode: currentMode,
                   });
 
-                  const promptText = `Halo ${detectedUserMeta.name}! Kecepatan saat ini: ${currentMode}. Untuk mengubah, pindahkan kartu ke A2 Normal, B2 Sedang, C2 Cepat, D2 Sangat Cepat, atau E2 Maksimal. Biarkan di tempat jika tidak diubah.`;
+                  const promptText = `Halo ${detectedUserMeta.name}! Mode suara: ${currentMode}. Geser kartu ke baris 2 untuk ubah kecepatan, atau angkat kartu untuk masuk Lab.`;
 
                   const promptLiftForDefaultSpeed = () => {
                     if (redirected || awaitingLiftTarget) return;
@@ -1116,7 +1116,7 @@ export default function PortalHome() {
                       isRedirectingRef.current = true;
                       playEarcon("clear");
                       speakNarration(
-                        `Mode ${currentMode} aktif. Membuka LENTERA Lab.`,
+                        `Membuka LENTERA Lab.`,
                         {
                           rate: currentRate,
                           pitch: 1.02,
@@ -1124,12 +1124,12 @@ export default function PortalHome() {
                           onEnd: () => router.push("/aruco"),
                         }
                       );
-                      setTimeout(() => router.push("/aruco"), 2400);
+                      setTimeout(() => router.push("/aruco"), 1800);
                     } else {
                       requestLiftThenNavigate(
                         "/aruco",
                         "LENTERA Lab",
-                        `Mode ${currentMode} aktif. Silakan angkat kartu untuk masuk ke LENTERA Lab.`,
+                        `Mode ${currentMode} aktif. Angkat kartu untuk masuk Lab.`,
                         currentRate
                       );
                     }
@@ -1142,13 +1142,12 @@ export default function PortalHome() {
                     onEnd: () => {
                       promptFinishedForDefaultSpeed = true;
                       if (!redirected && !awaitingLiftTarget) {
-                        // Berikan jeda 5 detik agar siswa sempat mencerna narasi & berpikir selagi balok masih di kotak asal
                         if (speedTimer) clearTimeout(speedTimer);
                         speedTimer = setTimeout(() => {
                           if (!redirected && !awaitingLiftTarget) {
                             promptLiftForDefaultSpeed();
                           }
-                        }, 5000);
+                        }, 2500);
                       }
                     },
                   });
