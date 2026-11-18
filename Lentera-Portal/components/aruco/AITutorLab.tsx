@@ -18,6 +18,7 @@ import {
 import { speakNarration, cancelSpeech, getSavedSpeechRate } from "@/utils/audioCoordinator";
 import { playEarcon } from "@/utils/soundEffects";
 import { isStudentToken, getStudentNameFromToken } from "./VoiceGuide";
+import { recordLiveCircuitSuccess, recordAITutorInteraction } from "@/utils/progress";
 
 interface Msg {
   role: "ai" | "user";
@@ -205,6 +206,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
       }
 
       setMessages((prev) => [...prev, { role: "ai", text: data.text, note: data.note }]);
+      recordAITutorInteraction();
       playEarcon("step");
       speak(data.text);
     } catch (err) {
@@ -482,11 +484,12 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           ([k, v]) => Boolean(v) && !isStudentToken(v) && k !== "A1"
         ).length;
 
-        // Umpan balik bunyi instan + narasi suara saat siswa merangkai di dalam Tanya AI (menyala / korsleting)
+        // Umpan balik bunyi instan + narasi suara + update progres saat siswa merangkai di dalam Tanya AI
         const currStatus = String(e.detail.status || "");
         if (currStatus !== prevCircuitStatusRef.current) {
           prevCircuitStatusRef.current = currStatus;
           if (currStatus === "success" || currStatus === "closed") {
+            recordLiveCircuitSuccess(e.detail.graph_type, cells);
             playEarcon("victory");
             setTimeout(() => {
               if (!isListeningRef.current && !loadingRef.current && !isHandlingNavRef.current) {

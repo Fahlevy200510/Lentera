@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import {
   completeModule,
+  recordLiveCircuitSuccess,
   getStudentProgress,
   getActiveStudent,
   PRESET_STUDENTS,
@@ -1188,6 +1189,8 @@ export default function VoiceGuide() {
         if (detail?.isComplete || detail?.status === "success") {
           if (!hasTriggeredSuccessEarconRef.current) {
             hasTriggeredSuccessEarconRef.current = true;
+            const updated = recordLiveCircuitSuccess(detail?.graph_type, cells);
+            setStudentProgress(updated);
             playEarcon("victory");
             setTimeout(() => {
               if (!isSpeakingRef.current) {
@@ -1317,6 +1320,8 @@ export default function VoiceGuide() {
         if (detail?.isComplete || detail?.status === "success") {
           if (!hasTriggeredSuccessEarconRef.current) {
             hasTriggeredSuccessEarconRef.current = true;
+            const updated = recordLiveCircuitSuccess(detail?.graph_type, cells);
+            setStudentProgress(updated);
             playEarcon("victory");
             setTimeout(() => {
               speak("Lampu berhasil menyala! Rangkaian bebasmu sudah terhubung sempurna.");

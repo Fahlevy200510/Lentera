@@ -654,7 +654,7 @@ function TeacherOverview() {
       prog.modules.parallel_circuit,
       prog.modules.circuit_troubleshoot,
     ].filter(Boolean).length;
-    const calcMastery = Math.min(100, Math.max(st.mastery, Math.round((prog.xp / 1000) * 85 + completedMods * 3)));
+    const calcMastery = Math.min(100, Math.round(Math.min(prog.xp, 1000) * 0.065 + completedMods * 7));
     const calcLevel = prog.xp >= 1000 ? "Insinyur" : prog.xp >= 500 ? "Teknisi" : "Penjelajah";
     const calcStatus: [string, string] = calcMastery >= 80 ? ["blue", "Siap naik level"] : calcMastery >= 55 ? ["green", "Sesuai target"] : ["warn", "Perlu bantuan"];
     return { ...st, level: calcLevel, mastery: calcMastery, status: calcStatus };

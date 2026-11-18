@@ -312,7 +312,94 @@ export function completeModule(
     if (!updated.achievements.includes("Master Detektif Sirkuit")) {
       updated.achievements.push("Master Detektif Sirkuit");
     }
+    if (!updated.achievements.includes("Tanpa Petunjuk")) {
+      updated.achievements.push("Tanpa Petunjuk");
+    }
     updated.xp = Math.max(updated.xp, 1200);
+  }
+
+  saveStudentProgress(updated, studentId);
+  return updated;
+}
+
+/**
+ * Mencatat keberhasilan merakit rangkaian secara live (baik di Tanya AI Tutor, Mode Eksplorasi Bebas, maupun papan fisik)
+ * agar langsung ter-update ke progres siswa di LENTERA Learn & Rapor AI saat demo.
+ */
+export function recordLiveCircuitSuccess(
+  graphType?: string,
+  cells?: Record<string, any>,
+  studentId?: string
+): StudentProgress {
+  const current = getStudentProgress(studentId);
+  const lampCount = cells
+    ? Object.values(cells).filter((c: any) => c && c.component === "lamp").length
+    : 1;
+  const isParallel = graphType === "parallel" || lampCount >= 2;
+
+  const updated: StudentProgress = {
+    ...current,
+    modules: {
+      ...current.modules,
+      component_recognition: true,
+      series_circuit: true,
+      ...(isParallel ? { parallel_circuit: true } : {}),
+    },
+    skills: {
+      battery: 5,
+      cable: 5,
+      switch: 5,
+      flow: isParallel ? 5 : Math.max(current.skills.flow, 4),
+      series: 5,
+      parallel: isParallel ? 5 : Math.max(current.skills.parallel, 2),
+    },
+    xp: isParallel ? Math.max(current.xp + 200, 1000) : Math.max(current.xp + 150, 750),
+    achievements: [...current.achievements],
+  };
+
+  for (const badge of ["Cahaya Pertama", "Ahli Seri"]) {
+    if (!updated.achievements.includes(badge)) {
+      updated.achievements.push(badge);
+    }
+  }
+  if (isParallel) {
+    for (const badge of ["Penjelajah Tegangan", "Master Rangkaian"]) {
+      if (!updated.achievements.includes(badge)) {
+        updated.achievements.push(badge);
+      }
+    }
+  }
+
+  saveStudentProgress(updated, studentId);
+  return updated;
+}
+
+/**
+ * Mencatat keaktifan siswa bertanya dan memecahkan masalah bersama AI Tutor di Lab
+ */
+export function recordAITutorInteraction(studentId?: string): StudentProgress {
+  const current = getStudentProgress(studentId);
+  const updated: StudentProgress = {
+    ...current,
+    modules: {
+      ...current.modules,
+      component_recognition: true,
+      circuit_troubleshoot: true,
+    },
+    skills: {
+      ...current.skills,
+      battery: Math.max(current.skills.battery, 5),
+      cable: Math.max(current.skills.cable, 5),
+      switch: Math.max(current.skills.switch, 5),
+      flow: Math.max(current.skills.flow, 4),
+      series: Math.max(current.skills.series, 4),
+    },
+    xp: current.xp + 50,
+    achievements: [...current.achievements],
+  };
+
+  if (!updated.achievements.includes("Tanpa Petunjuk")) {
+    updated.achievements.push("Tanpa Petunjuk");
   }
 
   saveStudentProgress(updated, studentId);
