@@ -26,8 +26,10 @@ KONTEKS PERANGKAT KERAS PAPAN TAKTIL LENTERA (WAJIB DIPATUHI):
 
 PERAN & PRINSIP PEDAGOGIS:
 1. "Jelaskan Sebelum Menjawab": Jangan memberi jawaban instan tanpa alasan; apresiasi usaha siswa lalu bimbing secara terarah.
-2. Kosakata Taktil: JANGAN PERNAH memakai instruksi visual seperti "lihat gambar" atau "perhatikan warna kabel". Gunakan bahasa taktil seperti "raba", "rasakan bentuk saklar geser timbul di atas balok", "putar blok saklar 90 derajat dari posisi sekarang", dan "telusuri alur kabel".
-3. Bahasa & Panjang Jawaban (PAS UNTUK DEMO): Jawab dalam Bahasa Indonesia yang hangat, suportif, dan mengalir alami dalam 2–3 kalimat (sekitar 35–55 kata): kalimat pertama mengapresiasi/mengonfirmasi rangkaian siswa di papan, kalimat kedua menjelaskan komponen/langkah taktilnya, dan kalimat ketiga mengajak siswa mencoba atau berefleksi singkat.
+2. Kosakata Taktil & Non-Visual Mutlak (KHUSUS SISWA TUNANETRA):
+   - DILARANG KERAS memakai kata visual seperti "lihat", "melihat", "perhatikan", "amati", "tampak", atau "lihat apakah lampu menyala". Untuk mengecek apakah lampu menyala, WAJIB katakan "dengarkan bunyi indikator atau suara narator apakah lampu sudah menyala".
+   - DILARANG KERAS memakai kalimat "rasakan aliran listrik" atau "merasakan arus listrik" karena balok bersifat pasif tanpa listrik nyata. Sebagai gantinya, WAJIB katakan "raba arah alur garis timbul mulai dari baterai melewati kabel hingga ke lampu".
+3. Bahasa & Panjang Jawaban (PAS UNTUK DEMO): Jawab dalam Bahasa Indonesia yang hangat, suportif, dan mengalir alami dalam 2–3 kalimat (sekitar 35–55 kata): kalimat pertama mengapresiasi/mengonfirmasi rangkaian siswa di papan, kalimat kedua menjelaskan langkah rabaan taktilnya (putar blok saklar 90 derajat dari posisi sekarang / raba arah alur timbul dari baterai), dan kalimat ketiga mengajak siswa mendengarkan indikator suara atau berefleksi singkat.
 4. Mode Interaksi:
    - Mode Eksplorasi: Mengenal komponen dan analogi taktil untuk aliran listrik.
    - Mode Pemecahan Masalah: Menelusuri kesalahan rangkaian secara sistematis menggunakan data sensor koordinat papan A1–E5.
@@ -222,12 +224,35 @@ function generateCLEFallbackResponse(
   };
 }
 
+function sanitizeBlindFriendlyText(input: string): string {
+  return input
+    // Ganti "rasakan aliran/arus listrik" menjadi raba arah alur garis timbul mulai dari baterai
+    .replace(
+      /(?:coba\s+)?(?:rasakan|merasakan)\s+(?:aliran|arus)\s+listrik(?:nya)?/gi,
+      "raba arah alur garis timbul mulai dari baterai"
+    )
+    // Ganti "lihat/perhatikan/amati apakah lampu..." menjadi "dengarkan apakah lampu..."
+    .replace(
+      /\b(?:coba\s+)?(?:lihat|melihat|perhatikan|memperhatikan|amati|mengamati)\s+(?=apakah\b|lampu\b|nyala\b|indikator\b)/gi,
+      "dengarkan "
+    )
+    // Ganti kata kerja visual umum ("coba lihat", "lihatlah", "lihat di", "perhatikan") menjadi "raba"
+    .replace(
+      /\b(?:lihatlah|coba\s+lihat|mari\s+lihat|perhatikanlah|coba\s+perhatikan|amatilah|coba\s+amati)\b/gi,
+      "coba raba"
+    )
+    .replace(/\b(?:melihat|memperhatikan|mengamati)\b/gi, "meraba")
+    .replace(/\b(?:lihat|perhatikan|amati)\b/gi, "raba");
+}
+
 function trimToConciseSentences(raw: string): string {
-  const cleaned = raw
-    .replace(/\*\*|__|\*|`/g, "")
-    .replace(/^\s*[-•\d.)]+\s+/gm, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  const cleaned = sanitizeBlindFriendlyText(
+    raw
+      .replace(/\*\*|__|\*|`/g, "")
+      .replace(/^\s*[-•\d.)]+\s+/gm, "")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
   if (!cleaned) return "";
   const parts =
     cleaned
@@ -313,7 +338,7 @@ export async function POST(req: NextRequest) {
       }
       : null;
 
-    const brevityRule = `\n\nATURAN PANJANG & GAYA JAWABAN (WAJIB): Jawab dalam 2–3 kalimat yang hangat, jelas, dan pas (sekitar 35–55 kata), tanpa poin-poin. PENTING TENTANG SAKLAR: ciri rabaan di atas balok saklar adalah bentuk saklar geser timbul (bukan bundar), TETAPI cara menyalakannya di papan adalah dengan MEMUTAR BLOK SAKLAR 90 DERAJAT dari posisi sekarang (bukan digeser).`;
+    const brevityRule = `\n\nATURAN PANJANG & GAYA JAWABAN (WAJIB): Jawab dalam 2–3 kalimat yang hangat, jelas, dan pas (sekitar 35–55 kata), tanpa poin-poin. PENTING: (1) Ciri rabaan di atas balok saklar adalah bentuk saklar geser timbul (bukan bundar), TETAPI cara menyalakannya di papan adalah dengan MEMUTAR BLOK SAKLAR 90 DERAJAT dari posisi sekarang (bukan digeser). (2) JANGAN PERNAH gunakan kata "lihat/perhatikan/amati" (gunakan "dengarkan apakah lampu menyala") dan JANGAN PERNAH katakan "rasakan aliran listrik" (gunakan "raba arah alur garis timbul mulai dari baterai melewati kabel hingga ke lampu").`;
 
     const contextBlock = sanitizedState
       ? `\n\nDAFTAR PASTI KOMPONEN DI PAPAN SAAT INI (PATUHI 100%, JANGAN SEBUT KOMPONEN LAIN ATAU BALOK A1):\n${boardSummary}\n\nData sensor rangkaian fisik saat ini:\n${JSON.stringify(sanitizedState, null, 2)}\nMode saat ini: ${mode}${diagnosisRule}${brevityRule}`

@@ -148,6 +148,7 @@ const tutorSource = fs.readFileSync(tutorRoutePath, "utf8");
 assert.equal(/Saklar[\s\S]{0,60}lingkaran di tengah/i.test(tutorSource), false);
 assert.equal(/SAKLAR GESER/i.test(tutorSource), true);
 assert.equal(/function trimToConciseSentences/.test(tutorSource), true);
+assert.equal(/function sanitizeBlindFriendlyText/.test(tutorSource), true);
 
 console.log("CircuitDiagram & AI Tutor self-check passed (7/7 scenario groups).");
 
