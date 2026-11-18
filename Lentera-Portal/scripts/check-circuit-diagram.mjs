@@ -149,6 +149,60 @@ assert.equal(/Saklar[\s\S]{0,60}lingkaran di tengah/i.test(tutorSource), false);
 assert.equal(/SAKLAR GESER/i.test(tutorSource), true);
 assert.equal(/function trimToConciseSentences/.test(tutorSource), true);
 assert.equal(/function sanitizeBlindFriendlyText/.test(tutorSource), true);
+assert.equal(/function diagnoseCircuitBoard/.test(tutorSource), true);
 
-console.log("CircuitDiagram & AI Tutor self-check passed (7/7 scenario groups).");
+// Compile route.ts with diagnosis helper exposed for self-check
+const { outputText: tutorJs } = ts.transpileModule(
+  tutorSource + "\nmodule.exports.__test = { diagnoseCircuitBoard, trimToConciseSentences };",
+  {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      esModuleInterop: true,
+    },
+    fileName: tutorRoutePath,
+  }
+);
+const tutorMod = new Module(tutorRoutePath);
+tutorMod.filename = tutorRoutePath;
+tutorMod.paths = Module._nodeModulePaths(path.dirname(tutorRoutePath));
+tutorMod._compile(tutorJs, tutorRoutePath);
+
+const { diagnoseCircuitBoard, trimToConciseSentences } = tutorMod.exports.__test;
+
+// Verify exact board from user screenshot: B4 battery horizontal (rotation 90), B5/C5/D5/E5/E4/E3/D3/C3/B3 connected
+const screenshotBatteryWrong = {
+  status: "not_connected",
+  circuit_closed: false,
+  polarity_correct: true,
+  cells: {
+    B4: { component: "battery", rotation: 90, id: 1 },
+    B5: { component: "l_cable", rotation: 90, id: 3 },
+    C5: { component: "switch", rotation: 90, is_on: true, id: 6 },
+    D5: { component: "straight_cable", rotation: 0, id: 2 },
+    E5: { component: "l_cable", rotation: 180, id: 3 },
+    E4: { component: "straight_cable", rotation: 90, id: 2 },
+    E3: { component: "l_cable", rotation: 270, id: 3 },
+    D3: { component: "straight_cable", rotation: 0, id: 2 },
+    C3: { component: "lamp", rotation: 0, id: 5 },
+    B3: { component: "l_cable", rotation: 0, id: 3 },
+  },
+};
+const diag = diagnoseCircuitBoard(screenshotBatteryWrong);
+assert.equal(diag.misorientedCells.length, 1);
+assert.equal(diag.misorientedCells[0].cell, "B4");
+assert.equal(diag.misorientedCells[0].label, "Baterai");
+assert.equal(diag.correctCells.some((c) => c.includes("B5")), true);
+assert.equal(diag.correctCells.some((c) => c.includes("E5")), true);
+assert.equal(diag.correctCells.some((c) => c.includes("E3")), true);
+assert.equal(diag.correctCells.some((c) => c.includes("B3")), true);
+
+// Verify blind-friendly text sanitizer
+const sanitized = trimToConciseSentences("Coba rasakan aliran listrik dan lihat apakah lampu menyala?");
+assert.equal(/lihat/i.test(sanitized), false);
+assert.equal(/rasakan aliran listrik/i.test(sanitized), false);
+assert.equal(/raba arah alur garis timbul mulai dari baterai/i.test(sanitized), true);
+assert.equal(/dengarkan apakah lampu menyala/i.test(sanitized), true);
+
+console.log("CircuitDiagram & AI Tutor self-check passed (8/8 scenario groups).");
 

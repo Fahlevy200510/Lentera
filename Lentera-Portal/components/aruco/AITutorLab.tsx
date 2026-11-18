@@ -482,14 +482,24 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
           ([k, v]) => Boolean(v) && !isStudentToken(v) && k !== "A1"
         ).length;
 
-        // Umpan balik bunyi instan saat siswa merangkai di dalam Tanya AI (menyala / korsleting)
+        // Umpan balik bunyi instan + narasi suara saat siswa merangkai di dalam Tanya AI (menyala / korsleting)
         const currStatus = String(e.detail.status || "");
         if (currStatus !== prevCircuitStatusRef.current) {
           prevCircuitStatusRef.current = currStatus;
           if (currStatus === "success" || currStatus === "closed") {
             playEarcon("victory");
+            setTimeout(() => {
+              if (!isListeningRef.current && !loadingRef.current && !isHandlingNavRef.current) {
+                speak("Lampu berhasil menyala! Rangkaianmu sudah terhubung dengan benar.");
+              }
+            }, 650);
           } else if (currStatus === "short_circuit" || currStatus === "short") {
             playEarcon("warning");
+            setTimeout(() => {
+              if (!isListeningRef.current && !loadingRef.current && !isHandlingNavRef.current) {
+                speak("Peringatan korsleting arus pendek! Segera lepaskan salah satu kabel.");
+              }
+            }, 650);
           }
         }
 

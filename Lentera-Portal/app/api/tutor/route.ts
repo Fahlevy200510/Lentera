@@ -64,6 +64,237 @@ const COMPONENT_NAME_ID: Record<string, string> = {
   resistor: "Resistor",
 };
 
+type Direction = "Atas" | "Kanan" | "Bawah" | "Kiri";
+
+const DIRECTIONS: Record<Direction, [number, number]> = {
+  Atas: [0, 1],
+  Bawah: [0, -1],
+  Kiri: [-1, 0],
+  Kanan: [1, 0],
+};
+
+const CW_ORDER: Direction[] = ["Atas", "Kanan", "Bawah", "Kiri"];
+
+const OPPOSITE: Record<Direction, Direction> = {
+  Atas: "Bawah",
+  Bawah: "Atas",
+  Kiri: "Kanan",
+  Kanan: "Kiri",
+};
+
+const COMPONENT_DEFAULT_SIDES: Record<string, Direction[]> = {
+  straight_cable: ["Kiri", "Kanan"],
+  l_cable: ["Atas", "Kanan"],
+  t_cable: ["Kiri", "Kanan", "Bawah"],
+  battery: ["Atas", "Bawah"],
+  lamp: ["Kiri", "Kanan"],
+  switch: ["Atas", "Bawah", "Kiri", "Kanan"],
+  resistor: ["Kiri", "Kanan"],
+};
+
+function cellToXY(cellName: string): [number, number] {
+  const x = cellName.charCodeAt(0) - "A".charCodeAt(0);
+  const y = parseInt(cellName[1], 10) - 1;
+  return [x, y];
+}
+
+function xyToCell(x: number, y: number): string | null {
+  if (x >= 0 && x <= 4 && y >= 0 && y <= 4) {
+    return `${String.fromCharCode("A".charCodeAt(0) + x)}${y + 1}`;
+  }
+  return null;
+}
+
+function getOpenSides(component: string, rotation: number = 0): Direction[] {
+  const base = COMPONENT_DEFAULT_SIDES[component];
+  if (!base) return ["Atas", "Bawah", "Kiri", "Kanan"];
+  const steps = ((Math.round(rotation / 90) % 4) + 4) % 4;
+  return base.map((s) => CW_ORDER[(CW_ORDER.indexOf(s) + steps) % 4]);
+}
+
+function getNeighborCell(cellName: string, dir: Direction): string | null {
+  const [x, y] = cellToXY(cellName);
+  const [dx, dy] = DIRECTIONS[dir];
+  return xyToCell(x + dx, y + dy);
+}
+
+function isSwitchOnInGrid(cellName: string, cells: Record<string, any>): boolean {
+  const st = cells[cellName];
+  if (!st || st.component !== "switch") return true;
+  if (typeof st.is_on === "boolean") return st.is_on;
+  let vert = 0;
+  let horiz = 0;
+  for (const side of ["Atas", "Bawah"] as Direction[]) {
+    const nb = getNeighborCell(cellName, side);
+    if (nb && cells[nb] && getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) vert++;
+  }
+  for (const side of ["Kiri", "Kanan"] as Direction[]) {
+    const nb = getNeighborCell(cellName, side);
+    if (nb && cells[nb] && getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) horiz++;
+  }
+  const rot = ((st.rotation ?? 0) % 360 + 360) % 360;
+  const orient = vert > horiz ? "vertical" : "horizontal";
+  return orient === "vertical" ? rot === 0 || rot === 180 : rot === 90 || rot === 270;
+}
+
+export interface BoardDiagnosis {
+  primaryFaults: string[];
+  correctCells: string[];
+  misorientedCells: Array<{ cell: string; label: string; currentSides: string; targetSides: string }>;
+  offSwitchCells: string[];
+  openGapDetails: string[];
+  directCoachingText: string | null;
+}
+
+function diagnoseCircuitBoard(cs: any): BoardDiagnosis {
+  const cells = sanitizeCircuitCells(cs);
+  const entries = Object.entries(cells);
+  const result: BoardDiagnosis = {
+    primaryFaults: [],
+    correctCells: [],
+    misorientedCells: [],
+    offSwitchCells: [],
+    openGapDetails: [],
+    directCoachingText: null,
+  };
+  if (entries.length === 0) return result;
+
+  const status = String(cs?.status || "");
+  const batteries = entries.filter(([, v]) => v.component === "battery").map(([k]) => k);
+  const lamps = entries.filter(([, v]) => v.component === "lamp").map(([k]) => k);
+
+  if (batteries.length === 0) {
+    result.primaryFaults.push("Belum ada balok Baterai di papan sebagai sumber arus.");
+  }
+  if (lamps.length === 0) {
+    result.primaryFaults.push("Belum ada balok Lampu di papan sebagai beban listrik.");
+  }
+
+  for (const [cellName, state] of entries) {
+    const comp = String(state.component || "");
+    const rot = Number(state.rotation || 0);
+    const label = COMPONENT_NAME_ID[comp] || comp;
+
+    if (comp === "switch") {
+      const swOn = isSwitchOnInGrid(cellName, cells);
+      if (!swOn) {
+        result.offSwitchCells.push(cellName);
+        result.primaryFaults.push(
+          `Balok Saklar di kotak ${cellName} masih dalam posisi OFF (terbuka). Solusi: putar blok Saklar di kotak ${cellName} sebesar 90 derajat dari posisi sekarang ke posisi ON.`
+        );
+      } else {
+        result.correctCells.push(`${label} (${cellName})`);
+      }
+      continue;
+    }
+
+    const openSides = getOpenSides(comp, rot);
+    const countHits = (sides: Direction[]) => {
+      let occupiedHits = 0;
+      let mutualHits = 0;
+      for (const s of sides) {
+        const nb = getNeighborCell(cellName, s);
+        if (nb && cells[nb]) {
+          occupiedHits++;
+          const nbSides = getOpenSides(cells[nb].component, cells[nb].rotation);
+          if (nbSides.includes(OPPOSITE[s])) {
+            mutualHits++;
+          }
+        }
+      }
+      return { occupiedHits, mutualHits };
+    };
+
+    const curr = countHits(openSides);
+
+    if (curr.mutualHits < openSides.length) {
+      let bestOccupied = curr.occupiedHits;
+      let bestMutual = curr.mutualHits;
+      let bestSides = openSides;
+
+      for (const delta of [90, 180, 270]) {
+        const candRot = (rot + delta) % 360;
+        const candSides = getOpenSides(comp, candRot);
+        const cand = countHits(candSides);
+        if (
+          cand.mutualHits > bestMutual ||
+          (cand.mutualHits === bestMutual && cand.occupiedHits > bestOccupied)
+        ) {
+          bestOccupied = cand.occupiedHits;
+          bestMutual = cand.mutualHits;
+          bestSides = candSides;
+        }
+      }
+
+      if (bestMutual > curr.mutualHits || (bestMutual === curr.mutualHits && bestOccupied > curr.occupiedHits)) {
+        const currentSidesStr = openSides.join(" dan ");
+        const targetNeighbors = bestSides
+          .map((s) => {
+            const nb = getNeighborCell(cellName, s);
+            return nb && cells[nb] ? `${nb} (${s})` : s;
+          })
+          .join(" serta ");
+        result.misorientedCells.push({
+          cell: cellName,
+          label,
+          currentSides: currentSidesStr,
+          targetSides: targetNeighbors,
+        });
+        result.primaryFaults.push(
+          `Balok ${label} di kotak ${cellName} orientasinya SALAH: saat ini menghadap ${currentSidesStr}, sehingga belum menyambung ke jalur di ${targetNeighbors}. Solusi: putar blok ${label} di kotak ${cellName} sebesar 90 derajat dari posisi sekarang agar terhubung ke ${targetNeighbors}.`
+        );
+        continue;
+      }
+
+      // Jika seluruh ujung balok ini sudah mengarah ke tetangga yang terisi (hanya tetangganya yang belum menghadap balik), maka balok ini sendiri sudah benar
+      if (curr.occupiedHits === openSides.length) {
+        result.correctCells.push(`${label} (${cellName})`);
+        continue;
+      }
+
+      // Tidak bisa diperbaiki hanya dengan memutar balok ini -> berarti ada kotak kosong di sebelahnya
+      for (const s of openSides) {
+        const nb = getNeighborCell(cellName, s);
+        if (nb && !cells[nb]) {
+          result.openGapDetails.push(
+            `Ujung ${label} di ${cellName} mengarah ke kotak kosong ${nb} (${s})`
+          );
+        }
+      }
+    } else {
+      result.correctCells.push(`${label} (${cellName})`);
+    }
+  }
+
+  if (status === "polarity_reversed" || cs?.polarity_correct === false) {
+    const lampLoc = lamps.length > 0 ? ` di kotak ${lamps.join(", ")}` : "";
+    const batLoc = batteries.length > 0 ? ` di kotak ${batteries.join(", ")}` : "";
+    result.primaryFaults.push(
+      `Jalur rangkaian sudah tertutup penuh, tetapi kutub positif (+) dan negatif (-) antara Baterai${batLoc} dan Lampu LED${lampLoc} masih terbalik (polarity_reversed). Solusi: angkat dan putar blok Lampu${lampLoc} (atau blok Baterai${batLoc}) sebesar 180 derajat.`
+    );
+  } else if (status === "short_circuit") {
+    result.primaryFaults.push(
+      "Terjadi korsleting arus pendek karena jalur baterai terhubung langsung tanpa melewati beban lampu."
+    );
+  } else if (result.primaryFaults.length === 0 && result.openGapDetails.length > 0) {
+    result.primaryFaults.push(
+      `Jalur rangkaian masih terputus: ${result.openGapDetails.slice(0, 2).join("; ")}.`
+    );
+  }
+
+  if (result.misorientedCells.length > 0) {
+    const first = result.misorientedCells[0];
+    const others = result.misorientedCells.slice(1).map((m) => `${m.label} di ${m.cell}`);
+    const extraText = others.length > 0 ? ` serta ${others.join(" dan ")}` : "";
+    result.directCoachingText = `Sebagian besar susunan balokmu sudah rapi, namun balok ${first.label} di kotak ${first.cell}${extraText} posisinya masih menghadap ${first.currentSides} sehingga belum menyambung ke jalur rangkaian. Coba raba balok ${first.label} di kotak ${first.cell}, lalu putar bloknya 90 derajat dari posisi sekarang agar alur timbulnya menyambung ke ${first.targetSides}. Setelah diputar, dengarkan apakah suara indikator lampu menyala sudah berbunyi?`;
+  } else if (result.offSwitchCells.length > 0 && status !== "success") {
+    const swLoc = result.offSwitchCells.join(" dan ");
+    result.directCoachingText = `Hebat, jalur kabelmu sudah tersambung rapi, namun aliran arus masih terhenti karena saklar di kotak ${swLoc} masih dalam posisi OFF. Coba raba balok saklar dengan tekstur saklar geser timbul di kotak ${swLoc}, lalu putar blok saklarnya 90 derajat dari posisi sekarang agar jalurnya tertutup ke posisi ON. Setelah kamu putar, dengarkan apakah indikator suara lampu menyala sudah terdengar?`;
+  }
+
+  return result;
+}
+
 function sanitizeCircuitCells(cs: any): Record<string, any> {
   if (!cs?.cells || typeof cs.cells !== "object") return {};
   const clean: Record<string, any> = {};
@@ -111,6 +342,7 @@ function generateCLEFallbackResponse(
 ): { text: string; note: string } {
   const m = message.toLowerCase();
   const cs = normalizeCircuit(circuitState);
+  const boardDiag = diagnoseCircuitBoard(circuitState);
   const switchCells = findComponentCells(circuitState, "switch");
   const lampCells = findComponentCells(circuitState, "lamp");
 
@@ -144,15 +376,27 @@ function generateCLEFallbackResponse(
         note: "Diagnosis CLE: Polaritas lampu terbalik",
       };
     }
-    if (cs.switchOpen) {
+    if (cs.switchOpen || boardDiag.offSwitchCells.length > 0) {
+      if (boardDiag.directCoachingText && boardDiag.misorientedCells.length === 0) {
+        return {
+          text: boardDiag.directCoachingText,
+          note: "Diagnosis CLE: Saklar terbuka (Rangkaian Terbuka)",
+        };
+      }
       const switchLoc = switchCells.length > 0 ? ` di kotak ${switchCells.join(" atau ")}` : " di papanmu";
       return {
         text: `Hebat, jalur kabelmu sudah tersambung rapi, namun aliran arus masih terhenti karena saklar${switchLoc} masih dalam posisi OFF. Coba raba balok saklar dengan tekstur saklar geser timbul${switchLoc}, lalu putar blok saklarnya 90 derajat dari posisi sekarang agar jalurnya tertutup ke posisi ON. Setelah kamu putar, coba dengarkan apakah lampunya langsung menyala?`,
         note: "Diagnosis CLE: Saklar terbuka (Rangkaian Terbuka)",
       };
     }
+    if (boardDiag.directCoachingText) {
+      return {
+        text: boardDiag.directCoachingText,
+        note: "Diagnosis CLE: Orientasi komponen belum tepat",
+      };
+    }
     return {
-      text: "Bagus, kamu sudah mulai menyusun komponen di papan, tetapi jalur rangkaiannya masih terbuka sehingga arus belum bisa mengalir penuh. Coba telusuri alur garis timbul dari kutub positif baterai dari kotak ke kotak menggunakan ujung jarimu. Adakah kotak yang masih kosong atau arah belokan kabelnya belum bertemu menuju lampu?",
+      text: "Bagus, kamu sudah mulai menyusun komponen di papan, tetapi jalur rangkaiannya masih terbuka sehingga arus belum bisa mengalir penuh. Coba raba arah alur garis timbul mulai dari baterai dari kotak ke kotak menggunakan ujung jarimu. Adakah kotak yang masih kosong atau arah belokan kabelnya belum bertemu menuju lampu?",
       note: "Diagnosis CLE: Jalur rangkaian terbuka",
     };
   }
@@ -310,6 +554,7 @@ export async function POST(req: NextRequest) {
     // If Groq API key is provided, use LLaMA 3.3 70B
     let diagnosisRule = "";
     const sensorStatus = String(circuitState?.status || "");
+    const boardDiag = diagnoseCircuitBoard(circuitState);
     const switchCells = findComponentCells(circuitState, "switch");
     const lampCells = findComponentCells(circuitState, "lamp");
     if (sensorStatus === "polarity_reversed") {
@@ -326,6 +571,12 @@ export async function POST(req: NextRequest) {
       diagnosisRule = "\n\nDIAGNOSIS SENSOR: Belum ada lampu di papan. Jawab dalam 2–3 kalimat: minta siswa mencari balok lampu (kubah bundar timbul di tengah) untuk dipasang sebagai beban listrik.";
     } else if (sensorStatus === "success") {
       diagnosisRule = "\n\nSTATUS SENSOR: Rangkaian berhasil menyala sempurna! Berikan apresiasi hangat dan tanggapan reflektif dalam 2–3 kalimat.";
+    }
+
+    if (boardDiag.primaryFaults.length > 0) {
+      diagnosisRule += `\n\nFAKTA MUTLAK HASIL ANALISIS GEOMETRI PAPAN (100% AKURAT — WAJIB JADIKAN DASAR JAWABAN UTAMA):\n- Kesalahan spesifik di papan saat ini: ${boardDiag.primaryFaults.join(" ")}\n- Komponen yang SUDAH TERSAMBUNG BENAR (DILARANG KERAS MENYALAHKAN ATAU MENYURUH MEMUTAR KOMPONEN INI): ${boardDiag.correctCells.join(", ") || "tidak ada"}.`;
+    } else if (boardDiag.correctCells.length > 0) {
+      diagnosisRule += `\n\nFAKTA GEOMETRI PAPAN: Komponen yang sudah terpasang dengan orientasi benar: ${boardDiag.correctCells.join(", ")}.`;
     }
 
     const cleanCells = sanitizeCircuitCells(circuitState);

@@ -1184,6 +1184,22 @@ export default function VoiceGuide() {
           return;
         }
 
+        // Jika siswa langsung merangkai sirkuit di papan saat masih di menu idle dan rangkaian berhasil menyala
+        if (detail?.isComplete || detail?.status === "success") {
+          if (!hasTriggeredSuccessEarconRef.current) {
+            hasTriggeredSuccessEarconRef.current = true;
+            playEarcon("victory");
+            setTimeout(() => {
+              if (!isSpeakingRef.current) {
+                speak("Lampu berhasil menyala! Rangkaianmu sudah terhubung dengan benar.");
+              }
+            }, 650);
+          }
+          return;
+        } else {
+          hasTriggeredSuccessEarconRef.current = false;
+        }
+
         const activeCellEntry = placedCount === 1 ? Object.entries(cells).find(([, v]) => Boolean(v)) : null;
         const activeCellName = activeCellEntry?.[0] || null;
         const isFreshMenuBlock = Boolean(activeCellName && !initialCellsRef.current?.[activeCellName]);
@@ -1302,7 +1318,9 @@ export default function VoiceGuide() {
           if (!hasTriggeredSuccessEarconRef.current) {
             hasTriggeredSuccessEarconRef.current = true;
             playEarcon("victory");
-            speak("Luar biasa! Rangkaian bebasmu berhasil menyala sempurna! Arus listrik mengalir lancar ke seluruh lampu!");
+            setTimeout(() => {
+              speak("Lampu berhasil menyala! Rangkaian bebasmu sudah terhubung sempurna.");
+            }, 650);
           }
           return;
         } else {
