@@ -197,6 +197,82 @@ assert.equal(diag.correctCells.some((c) => c.includes("E5")), true);
 assert.equal(diag.correctCells.some((c) => c.includes("E3")), true);
 assert.equal(diag.correctCells.some((c) => c.includes("B3")), true);
 
+// Verify missing corner L-cable at E5 is diagnosed as needing Kabel Belok (L) (not straight cable)
+const missingCornerE5 = {
+  status: "not_connected",
+  circuit_closed: false,
+  polarity_correct: true,
+  cells: {
+    B4: { component: "battery", rotation: 0, id: 1 },
+    B5: { component: "l_cable", rotation: 90, id: 3 },
+    C5: { component: "switch", rotation: 90, is_on: true, id: 6 },
+    D5: { component: "straight_cable", rotation: 0, id: 2 },
+    // E5 removed!
+    E4: { component: "straight_cable", rotation: 90, id: 2 },
+    E3: { component: "l_cable", rotation: 270, id: 3 },
+    D3: { component: "straight_cable", rotation: 0, id: 2 },
+    C3: { component: "lamp", rotation: 0, id: 5 },
+    B3: { component: "l_cable", rotation: 0, id: 3 },
+  },
+};
+const diagCornerE5 = diagnoseCircuitBoard(missingCornerE5);
+assert.equal(diagCornerE5.missingCells.length, 1);
+assert.equal(diagCornerE5.missingCells[0].cell, "E5");
+assert.equal(diagCornerE5.missingCells[0].recommendedComponent, "Kabel Belok (L)");
+
+// Verify missing corner L-cable at B5 (next to switch C5 and battery B4) is also diagnosed as Kabel Belok (L)
+const missingCornerB5 = {
+  ...missingCornerE5,
+  cells: {
+    ...missingCornerE5.cells,
+    E5: { component: "l_cable", rotation: 180, id: 3 },
+  },
+};
+delete missingCornerB5.cells.B5;
+const diagCornerB5 = diagnoseCircuitBoard(missingCornerB5);
+assert.equal(diagCornerB5.missingCells.length, 1);
+assert.equal(diagCornerB5.missingCells[0].cell, "B5");
+assert.equal(diagCornerB5.missingCells[0].recommendedComponent, "Kabel Belok (L)");
+
+// Verify missing straight cable at D5 is diagnosed as Kabel Lurus
+const missingStraightD5 = {
+  ...missingCornerE5,
+  cells: {
+    ...missingCornerE5.cells,
+    E5: { component: "l_cable", rotation: 180, id: 3 },
+  },
+};
+delete missingStraightD5.cells.D5;
+const diagStraightD5 = diagnoseCircuitBoard(missingStraightD5);
+assert.equal(diagStraightD5.missingCells.length, 1);
+assert.equal(diagStraightD5.missingCells[0].cell, "D5");
+assert.equal(diagStraightD5.missingCells[0].recommendedComponent, "Kabel Lurus");
+
+// Verify missing T-cable at B4 in parallel circuit is diagnosed as Kabel Simpang Tiga (T)
+const missingTCableB4 = {
+  status: "not_connected",
+  circuit_closed: false,
+  polarity_correct: true,
+  cells: {
+    B5: { component: "l_cable", rotation: 90, id: 3 },
+    C5: { component: "battery", rotation: 270, id: 1 },
+    D5: { component: "straight_cable", rotation: 0, id: 2 },
+    E5: { component: "l_cable", rotation: 180, id: 3 },
+    // B4 T-cable removed!
+    C4: { component: "switch", rotation: 90, is_on: true, id: 6 },
+    D4: { component: "lamp", rotation: 0, id: 5 },
+    E4: { component: "t_cable", rotation: 90, id: 4 },
+    B3: { component: "l_cable", rotation: 0, id: 3 },
+    C3: { component: "switch", rotation: 90, is_on: true, id: 6 },
+    D3: { component: "lamp", rotation: 0, id: 5 },
+    E3: { component: "l_cable", rotation: 270, id: 3 },
+  },
+};
+const diagTB4 = diagnoseCircuitBoard(missingTCableB4);
+assert.equal(diagTB4.missingCells.length, 1);
+assert.equal(diagTB4.missingCells[0].cell, "B4");
+assert.equal(diagTB4.missingCells[0].recommendedComponent, "Kabel Simpang Tiga (T)");
+
 // Verify blind-friendly text sanitizer
 const sanitized = trimToConciseSentences("Coba rasakan aliran listrik dan lihat apakah lampu menyala?");
 assert.equal(/lihat/i.test(sanitized), false);

@@ -13,16 +13,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SYSTEM_PROMPT = `Kamu adalah LENTERA AI ASSISTANT — tutor lab sains yang adaptif dan inklusif untuk siswa tunanetra dan low vision, dikembangkan untuk LIDM 2026.
 
-KONTEKS PERANGKAT KERAS PAPAN TAKTIL LENTERA (WAJIB DIPATUHI):
-1. Papan Taktil 5×5 (A1–E5): Kolom A sampai E (kiri ke kanan) dan Baris 1 sampai 5 (Baris 1 paling dekat dengan tubuh siswa, Baris 5 paling jauh di depan siswa, C3 adalah titik tengah papan).
-2. Balok Pasif Tanpa Listrik Nyata (Zero Electrical Hazard): Seluruh balok komponen dicetak 3D (PLA) dengan penanda ArUco di bagian bawah dan simbol timbul di bagian atas. Balok TIDAK dialiri arus listrik nyata dan TIDAK PERNAH menjadi hangat/panas. JANGAN PERNAH menyuruh siswa meraba apakah lampu terasa hangat. Status menyala/mati disampaikan melalui suara narator dan efek audio.
-3. Enam Komponen Taktil & Cara Operasinya:
-   - Baterai (battery): simbol timbul garis pendek tebal untuk kutub negatif (-) dan tanda tambah (+) untuk kutub positif.
-   - Saklar (switch): permukaan atas balok memiliki tekstur timbul berbentuk SAKLAR GESER memanjang (BUKAN bundar/lingkaran; yang berbentuk bundar adalah kubah lampu). Namun untuk menyalakan (ON) atau mematikan (OFF) saklar di papan, JANGAN menyuruh menggeser tuasnya, melainkan PUTAR BLOK SAKLAR 90 DERAJAT dari posisi sekarang di dalam kotaknya.
-   - Lampu (lamp): simbol kubah/lingkaran bundar timbul di bagian tengah dengan tanda kutub (+) dan (-) di sisinya. Jika polaritasnya terbalik (polarity_reversed), siswa cukup memutar balok lampu 180 derajat.
-   - Kabel Lurus (straight_cable): satu garis lurus timbul memanjang di tengah.
-   - Kabel Belok / L (l_cable): garis timbul berbelok 90 derajat membentuk sudut siku-siku.
-   - Kabel Simpang Tiga / T (t_cable): garis lurus dengan satu cabang di tengah membentuk huruf T untuk membagi arus pada rangkaian paralel.
+KONTEKS PERANGKAT KERAS PAPAN TAKTIL LENTERA (WAJIB DIPATUHI 100%):
+1. Papan Taktil 5×5 (A1–E5) & Aturan 1 Kotak = 1 Balok:
+   - Kolom A sampai E (kiri ke kanan) dan Baris 1 sampai 5 (Baris 1 paling dekat dengan tubuh siswa, Baris 5 paling jauh di depan siswa, C3 adalah titik tengah papan).
+   - Setiap kotak hanya dapat diisi tepat 1 balok komponen. Arus hanya mengalir jika alur antar kotak yang bersebelahan saling bertemu membentuk satu loop tertutup dari kutub (+) baterai melewati lampu kembali ke kutub (-) baterai.
+2. Balok Pasif Tanpa Listrik Nyata (Zero Electrical Hazard):
+   - Seluruh balok dicetak 3D (PLA) dengan penanda ArUco di bawah dan tekstur timbul di atas. Balok TIDAK dialiri listrik nyata dan TIDAK PERNAH menjadi hangat. Status menyala/mati disampaikan melalui bunyi indikator dan suara narator.
+3. Enam Komponen Taktil, Bentuk Fisik, & Cara Kerjanya di Grid:
+   - Baterai (battery): Sumber energi listrik, menghubungkan 2 sisi lurus berhadapan (Atas–Bawah jika tegak, atau Kiri–Kanan jika mendatar). Ciri rabaan: simbol timbul tanda tambah (+) untuk kutub positif dan garis pendek tebal (-) untuk kutub negatif.
+   - Saklar (switch): Pengendali arus listrik 2 sisi lurus berhadapan. Ciri rabaan di atas balok: tekstur berbentuk SAKLAR GESER memanjang (BUKAN bundar). Cara mengaktifkan di papan: JANGAN digeser, melainkan PUTAR BLOK SAKLAR 90 DERAJAT dari posisi sekarang di dalam kotaknya untuk mengubah antara ON (menyambung jalur) dan OFF (memutus jalur).
+   - Lampu LED (lamp): Beban listrik 2 sisi lurus berhadapan. Ciri rabaan: kubah/lingkaran BUNDAR timbul di tengah dengan tanda kutub (+) dan (-) di sisinya. Memiliki sifat polaritas searah: arus dari kutub (+) baterai harus masuk ke kutub (+) lampu; jika terbalik (polarity_reversed), putar blok lampu 180 derajat.
+   - Kabel Lurus (straight_cable): Penghantar 2 sisi lurus berhadapan (mendatar Kiri–Kanan atau tegak Atas–Bawah). Ciri rabaan: satu garis lurus timbul di tengah. HANYA untuk jalur lurus, TIDAK BISA untuk berbelok di sudut!
+   - Kabel Belok / Sudut L (l_cable): Penghantar belokan siku 90 derajat yang menghubungkan 2 sisi tegak lurus (Atas–Kanan, Kanan–Bawah, Bawah–Kiri, atau Kiri–Atas). Ciri rabaan: garis timbul berbelok siku membentuk huruf L. WAJIB digunakan di setiap sudut belokan 90 derajat pada rangkaian! JANGAN PERNAH menyuruh memakai 2 kabel lurus untuk berbelok di sudut!
+   - Kabel Simpang Tiga / T (t_cable): Penghantar percabangan 3 sisi sekaligus membentuk huruf T. Ciri rabaan: garis lurus dengan satu cabang tegak lurus di tengah. WAJIB digunakan pada titik percabangan untuk membagi atau menyatukan arus pada rangkaian paralel.
 
 PERAN & PRINSIP PEDAGOGIS:
 1. "Jelaskan Sebelum Menjawab": Jangan memberi jawaban instan tanpa alasan; apresiasi usaha siswa lalu bimbing secara terarah.
@@ -118,22 +121,50 @@ function getNeighborCell(cellName: string, dir: Direction): string | null {
   return xyToCell(x + dx, y + dy);
 }
 
-function isSwitchOnInGrid(cellName: string, cells: Record<string, any>): boolean {
+function getSwitchWireAxis(cellName: string, cells: Record<string, any>): "horizontal" | "vertical" {
   const st = cells[cellName];
-  if (!st || st.component !== "switch") return true;
-  if (typeof st.is_on === "boolean") return st.is_on;
+  if (st?.wire_orientation === "vertical" || st?.wire_orientation === "horizontal") {
+    return st.wire_orientation;
+  }
   let vert = 0;
   let horiz = 0;
   for (const side of ["Atas", "Bawah"] as Direction[]) {
     const nb = getNeighborCell(cellName, side);
-    if (nb && cells[nb] && getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) vert++;
+    if (nb && cells[nb] && cells[nb].component !== "switch") {
+      if (getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) {
+        vert += 2;
+      }
+    }
   }
   for (const side of ["Kiri", "Kanan"] as Direction[]) {
     const nb = getNeighborCell(cellName, side);
-    if (nb && cells[nb] && getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) horiz++;
+    if (nb && cells[nb] && cells[nb].component !== "switch") {
+      if (getOpenSides(cells[nb].component, cells[nb].rotation).includes(OPPOSITE[side])) {
+        horiz += 2;
+      }
+    }
   }
+  if (vert > horiz) return "vertical";
+  if (horiz > vert) return "horizontal";
+  const rot = ((st?.rotation ?? 0) % 360 + 360) % 360;
+  return rot === 0 || rot === 180 ? "vertical" : "horizontal";
+}
+
+function getEffectiveOpenSides(cellName: string, cells: Record<string, any>): Direction[] {
+  const st = cells[cellName];
+  if (!st) return [];
+  if (st.component === "switch") {
+    return getSwitchWireAxis(cellName, cells) === "vertical" ? ["Atas", "Bawah"] : ["Kiri", "Kanan"];
+  }
+  return getOpenSides(st.component, st.rotation);
+}
+
+function isSwitchOnInGrid(cellName: string, cells: Record<string, any>): boolean {
+  const st = cells[cellName];
+  if (!st || st.component !== "switch") return true;
+  if (typeof st.is_on === "boolean") return st.is_on;
   const rot = ((st.rotation ?? 0) % 360 + 360) % 360;
-  const orient = vert > horiz ? "vertical" : "horizontal";
+  const orient = getSwitchWireAxis(cellName, cells);
   return orient === "vertical" ? rot === 0 || rot === 180 : rot === 90 || rot === 270;
 }
 
@@ -141,6 +172,7 @@ export interface BoardDiagnosis {
   primaryFaults: string[];
   correctCells: string[];
   misorientedCells: Array<{ cell: string; label: string; currentSides: string; targetSides: string }>;
+  missingCells: Array<{ cell: string; recommendedComponent: string; reason: string }>;
   offSwitchCells: string[];
   openGapDetails: string[];
   directCoachingText: string | null;
@@ -153,6 +185,7 @@ function diagnoseCircuitBoard(cs: any): BoardDiagnosis {
     primaryFaults: [],
     correctCells: [],
     misorientedCells: [],
+    missingCells: [],
     offSwitchCells: [],
     openGapDetails: [],
     directCoachingText: null,
@@ -196,7 +229,7 @@ function diagnoseCircuitBoard(cs: any): BoardDiagnosis {
         const nb = getNeighborCell(cellName, s);
         if (nb && cells[nb]) {
           occupiedHits++;
-          const nbSides = getOpenSides(cells[nb].component, cells[nb].rotation);
+          const nbSides = getEffectiveOpenSides(nb, cells);
           if (nbSides.includes(OPPOSITE[s])) {
             mutualHits++;
           }
@@ -266,6 +299,64 @@ function diagnoseCircuitBoard(cs: any): BoardDiagnosis {
     }
   }
 
+  // Analisis kotak kosong (celah/sudut yang belum dipasang balok): tentukan komponen tepat (Kabel L, Kabel Lurus, atau Kabel T)
+  const misorientedSet = new Set(result.misorientedCells.map((m) => m.cell));
+  const emptyCandidates: Record<string, Array<{ dirFromEmpty: Direction; neighborCell: string; neighborLabel: string }>> = {};
+
+  for (const [cellName, state] of entries) {
+    if (misorientedSet.has(cellName)) continue;
+    const label = COMPONENT_NAME_ID[state.component] || state.component;
+    const effSides = getEffectiveOpenSides(cellName, cells);
+    for (const s of effSides) {
+      const nb = getNeighborCell(cellName, s);
+      if (nb && !cells[nb]) {
+        if (!emptyCandidates[nb]) emptyCandidates[nb] = [];
+        emptyCandidates[nb].push({
+          dirFromEmpty: OPPOSITE[s],
+          neighborCell: cellName,
+          neighborLabel: label,
+        });
+      }
+    }
+  }
+
+  for (const [emptyCell, incoming] of Object.entries(emptyCandidates)) {
+    if (incoming.length >= 3) {
+      const dirsStr = incoming.map((i) => `${i.dirFromEmpty} (${i.neighborLabel} di ${i.neighborCell})`).join(", ");
+      const reason = `Kotak ${emptyCell} masih kosong pada titik percabangan 3 arah antara ${dirsStr}. Solusi: pasang 1 balok Kabel Simpang Tiga / T (t_cable) di kotak ${emptyCell}.`;
+      result.missingCells.push({
+        cell: emptyCell,
+        recommendedComponent: "Kabel Simpang Tiga (T)",
+        reason,
+      });
+      result.primaryFaults.push(reason);
+    } else if (incoming.length === 2) {
+      const [a, b] = incoming;
+      const isOpposite = OPPOSITE[a.dirFromEmpty] === b.dirFromEmpty;
+      if (isOpposite) {
+        const orientStr =
+          a.dirFromEmpty === "Kiri" || a.dirFromEmpty === "Kanan"
+            ? "mendatar (menghubungkan Kiri dan Kanan)"
+            : "tegak (menghubungkan Atas dan Bawah)";
+        const reason = `Kotak ${emptyCell} masih kosong di jalur lurus antara ${a.neighborLabel} di ${a.neighborCell} (${a.dirFromEmpty}) dan ${b.neighborLabel} di ${b.neighborCell} (${b.dirFromEmpty}). Solusi: pasang 1 balok Kabel Lurus (straight_cable) di kotak ${emptyCell} secara ${orientStr}.`;
+        result.missingCells.push({
+          cell: emptyCell,
+          recommendedComponent: "Kabel Lurus",
+          reason,
+        });
+        result.primaryFaults.push(reason);
+      } else {
+        const reason = `Kotak sudut ${emptyCell} masih kosong di belokan siku 90 derajat antara ${a.neighborLabel} di ${a.neighborCell} (arah ${a.dirFromEmpty}) dan ${b.neighborLabel} di ${b.neighborCell} (arah ${b.dirFromEmpty}). Solusi WAJIB: pasang 1 balok Kabel Belok / Sudut L (l_cable) di kotak ${emptyCell} dengan alur siku menghadap ${a.dirFromEmpty} dan ${b.dirFromEmpty} (JANGAN gunakan Kabel Lurus untuk belokan sudut!).`;
+        result.missingCells.push({
+          cell: emptyCell,
+          recommendedComponent: "Kabel Belok (L)",
+          reason,
+        });
+        result.primaryFaults.push(reason);
+      }
+    }
+  }
+
   if (status === "polarity_reversed" || cs?.polarity_correct === false) {
     const lampLoc = lamps.length > 0 ? ` di kotak ${lamps.join(", ")}` : "";
     const batLoc = batteries.length > 0 ? ` di kotak ${batteries.join(", ")}` : "";
@@ -287,6 +378,9 @@ function diagnoseCircuitBoard(cs: any): BoardDiagnosis {
     const others = result.misorientedCells.slice(1).map((m) => `${m.label} di ${m.cell}`);
     const extraText = others.length > 0 ? ` serta ${others.join(" dan ")}` : "";
     result.directCoachingText = `Sebagian besar susunan balokmu sudah rapi, namun balok ${first.label} di kotak ${first.cell}${extraText} posisinya masih menghadap ${first.currentSides} sehingga belum menyambung ke jalur rangkaian. Coba raba balok ${first.label} di kotak ${first.cell}, lalu putar bloknya 90 derajat dari posisi sekarang agar alur timbulnya menyambung ke ${first.targetSides}. Setelah diputar, dengarkan apakah suara indikator lampu menyala sudah berbunyi?`;
+  } else if (result.missingCells.length > 0) {
+    const firstMissing = result.missingCells[0];
+    result.directCoachingText = `Susunan komponenmu hampir membentuk rangkaian tertutup, tetapi kotak ${firstMissing.cell} masih kosong sehingga jalur arus terputus. Coba ambil satu balok ${firstMissing.recommendedComponent} lalu pasang di kotak ${firstMissing.cell} untuk menyambungkan jalur di sekitarnya. Setelah terpasang, dengarkan apakah indikator suara lampu menyala sudah terdengar?`;
   } else if (result.offSwitchCells.length > 0 && status !== "success") {
     const swLoc = result.offSwitchCells.join(" dan ");
     result.directCoachingText = `Hebat, jalur kabelmu sudah tersambung rapi, namun aliran arus masih terhenti karena saklar di kotak ${swLoc} masih dalam posisi OFF. Coba raba balok saklar dengan tekstur saklar geser timbul di kotak ${swLoc}, lalu putar blok saklarnya 90 derajat dari posisi sekarang agar jalurnya tertutup ke posisi ON. Setelah kamu putar, dengarkan apakah indikator suara lampu menyala sudah terdengar?`;
