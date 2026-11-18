@@ -41,7 +41,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "ai",
-      text: "Halo! Aku LENTERA AI Tutor. Di sini kamu bisa menyusun balok rangkaian listrik langsung di papan sambil bertanya kepadaku! Untuk bertanya lewat suara: taruh satu balok apa saja di kotak sudut kiri bawah A1, ucapkan pertanyaanmu, lalu angkat kembali balok dari A1 agar aku langsung menganalisis rangkaianmu dan menjawab.",
+      text: "Halo! Aku LENTERA AI Tutor. Susun balok rangkaianmu di papan, lalu taruh 1 balok di A1 sambil bicara dan angkat kembali saat selesai bertanya.",
       note: "AI Tutor Terhubung ke Kamera Papan Real-Time",
     },
   ]);
@@ -98,7 +98,7 @@ export default function AITutorLab({ onBack }: AITutorLabProps = {}) {
     cancelSpeech();
     playEarcon("click");
     speakNarration(
-      "Selamat datang di Tanya AI Tutor! Di sini kamu bisa menyusun balok rangkaian listrik di atas papan sambil bertanya langsung kepadaku. Cara bertanya dengan suara: letakkan satu balok apa saja di kotak sudut kiri bawah A1, lalu langsung bicaralah mengajukan pertanyaanmu. Jika sudah selesai bicara, segera angkat balok dari A1 agar AI langsung memeriksa susunan balok di papanmu dan menjawab. Jika ingin kembali ke panduan modul, pastikan papan kosong lalu letakkan satu balok di sudut kanan atas E5. Silakan merangkai di papan atau taruh balok di A1 untuk bertanya!",
+      "Selamat datang di Tanya AI Tutor! Susun rangkaianmu di papan, lalu taruh satu balok di A1 untuk bicara dan angkat kembali saat selesai agar AI langsung menjawab. Untuk kembali ke panduan modul, kosongkan papan dan taruh satu balok di E5.",
       {
         tag: "ai-tutor-lab-intro",
         rate: getSavedSpeechRate(),

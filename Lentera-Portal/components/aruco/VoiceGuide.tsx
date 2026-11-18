@@ -138,10 +138,10 @@ const RECOGNITION_STEPS: StepDef[] = [
     explanation: "Ini adalah balok Baterai, sumber energi utama rangkaian. Baterai menghasilkan tegangan untuk mendorong arus listrik dari kutub positif menuju kutub negatif melalui rangkaian tertutup.",
   },
   {
-    instruction: "Raba dan cari balok Saklar (saklar putar 90 derajat), letakkan di sel C3.",
-    voice: "Komponen kedua adalah Saklar, pengendali aliran listrik. Raba balok yang memiliki penanda jalur timbul untuk diputar 90 derajat antara posisi ON dan OFF. Saklar berfungsi menyambung dan memutus arus. Letakkan balok Saklar ini di sel C3.",
+    instruction: "Raba dan cari balok Saklar (tuas saklar geser timbul), letakkan di sel C3.",
+    voice: "Komponen kedua adalah Saklar, pengendali aliran listrik. Raba balok yang memiliki tuas saklar geser timbul di bagian atasnya. Saklar berfungsi menyambung dan memutus arus. Letakkan balok Saklar ini di sel C3.",
     targetCells: { "C3": "switch" },
-    hint: "Raba bagian atas balok: temukan simbol saklar timbul yang dapat diputar 90 derajat untuk menyambung dan memutus aliran listrik.",
+    hint: "Raba bagian atas balok: temukan tuas saklar geser timbul untuk menyambung dan memutus aliran listrik.",
     explanation: "Ini adalah balok Saklar. Saklar berfungsi menghubungkan dan memutuskan aliran listrik. Untuk menyalakannya, putar balok saklar 90 derajat dari posisi terakhirnya hingga ON, maka arus listrik mengalir. Putar lagi 90 derajat untuk kembali ke OFF, aliran listrik terputus dan lampu akan padam.",
   },
   {
@@ -198,10 +198,10 @@ const ALL_REGISTERED_QUIZ_BANK: {
     },
     {
       title: "Pengendali Aliran Listrik",
-      question: "Komponen manakah yang berfungsi menghubungkan dan memutuskan aliran listrik saat diputar 90 derajat?",
+      question: "Komponen manakah yang berfungsi menghubungkan dan memutuskan aliran listrik dengan saklar geser?",
       component: "switch",
-      hint: "Cari balok saklar yang dapat diputar 90 derajat antara posisi ON dan OFF di bagian atasnya.",
-      explanation: "Tepat sekali! Itu adalah Saklar untuk menghubungkan dan memutuskan aliran listrik.",
+      hint: "Cari balok yang memiliki tuas saklar geser timbul di bagian atasnya.",
+      explanation: "Tepat sekali! Itu adalah Saklar geser untuk menghubungkan dan memutuskan aliran listrik.",
     },
     {
       title: "Penghantar Arus Jalur Lurus",
@@ -571,7 +571,7 @@ export const getStudentNameFromToken = (cell: any): string => {
 
 const COMPONENT_TACTILE_HINT: Record<string, string> = {
   battery: "memiliki simbol plus dan minus timbul di kedua ujungnya",
-  switch: "memiliki penanda saklar timbul yang dapat diputar 90 derajat ke posisi ON atau OFF di atasnya",
+  switch: "memiliki tuas saklar geser timbul di bagian atasnya",
   lamp: "memiliki kubah bundar timbul serta tanda plus (+) dan minus (-) timbul untuk kutub polaritasnya",
   straight_cable: "memiliki alur garis lurus timbul melintang",
   l_cable: "memiliki alur timbul siku-siku seperti huruf L",
@@ -910,15 +910,15 @@ export default function VoiceGuide() {
 
         let promptMessage = `Siswa bernama ${sName} sedang merakit rangkaian bebas di lab dan meminta umpan balik. Komponen terpasang saat ini: ${placedSummary}.`;
         if (status === "polarity_reversed") {
-          promptMessage += ` PERINGATAN SENSOR: Polaritas lampu LED terbalik (polarity_reversed). Seluruh lintasan sirkuit baterai dan kabel SEBENARNYA SUDAH TERSAMBUNG DAN TERTUTUP! Hanya kutub lampu LED yang terbalik. Bimbing siswa untuk meraba balok lampu tersebut, lalu memutar posisinya 180 derajat. JANGAN menyuruh menyambung kabel lagi!`;
+          promptMessage += ` PERINGATAN SENSOR: Polaritas lampu LED terbalik (polarity_reversed), sedangkan jalur kabel sudah tertutup. Jawab singkat maksimal 2 kalimat: minta siswa meraba kubah bundar lampu tersebut lalu memutar posisinya 180 derajat.`;
         } else if (status === "switch_off") {
-          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar masih terbuka atau OFF. Bimbing siswa untuk meraba balok saklar lalu memutar balok saklar tersebut 90 derajat di tempatnya ke posisi ON.`;
+          promptMessage += ` DIAGNOSIS SENSOR: Rangkaian sudah tersambung tetapi balok saklar masih OFF. Jawab singkat maksimal 2 kalimat: minta siswa meraba tuas saklar geser lalu menggeser/memutarnya 90 derajat ke posisi ON.`;
         } else if (status === "short_circuit") {
-          promptMessage += ` PERINGATAN BAHAYA: Terjadi korsleting arus pendek tanpa hambatan beban! Bimbing siswa segera melepaskan kabel atau memasang lampu.`;
+          promptMessage += ` PERINGATAN BAHAYA: Korsleting arus pendek tanpa beban! Jawab singkat maksimal 2 kalimat: minta siswa segera melepas kabel atau memasang lampu.`;
         } else if (status === "success") {
-          promptMessage += ` STATUS: Rangkaian berhasil menyala sempurna! Berikan apresiasi hangat atas ketelitian taktil siswa.`;
+          promptMessage += ` STATUS: Rangkaian berhasil menyala! Berikan apresiasi singkat 1–2 kalimat.`;
         } else {
-          promptMessage += ` Status sirkuit: ${status}. Berikan bimbingan taktil singkat 2 kalimat yang ramah dan memotivasi untuk menyambungkan rangkaian tertutup.`;
+          promptMessage += ` Status sirkuit: ${status}. Berikan bimbingan taktil singkat 1–2 kalimat untuk menyambungkan rangkaian tertutup.`;
         }
 
         const res = await fetch("/api/tutor", {

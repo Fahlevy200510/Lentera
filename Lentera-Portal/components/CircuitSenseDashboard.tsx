@@ -1348,7 +1348,7 @@ function IsoBlock({ front, side, symbol }: { front: string; side: string; symbol
 interface TactilePart { name: string; symbol: "battery" | "switch" | "lamp" | "cable"; front: string; side: string; braille: string; texture: string; }
 const tactileParts: TactilePart[] = [
   { name: "Baterai", symbol: "battery", front: C.blue, side: "#1D4ED8", braille: "Simbol (+) dan (−) timbul", texture: "Kedua kutub bertanda taktil timbul: tanda tambah (+) dan garis pendek tebal (-)" },
-  { name: "Saklar", symbol: "switch", front: C.green, side: "#15803D", braille: "Lingkaran tengah & 2 garis samping", texture: "Diputar 90 derajat di dalam slot untuk menyalakan (ON) atau mematikan (OFF)" },
+  { name: "Saklar", symbol: "switch", front: C.green, side: "#15803D", braille: "Tuas saklar geser timbul", texture: "Tuas saklar geser timbul di bagian atas balok untuk menyalakan (ON) atau mematikan (OFF)" },
   { name: "Lampu", symbol: "lamp", front: "#F59E0B", side: "#B45309", braille: "Lingkaran berongga di tengah", texture: "Beban listrik pasif dengan indikator nyala melalui suara narator dan buzzer" },
   { name: "Kabel", symbol: "cable", front: C.primary, side: C.primaryDeep, braille: "Alur garis timbul (Lurus, L, T)", texture: "Garis timbul lurus, belok 90° (L), dan simpang tiga (T) di atas permukaan balok" },
 ];

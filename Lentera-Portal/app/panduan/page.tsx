@@ -420,7 +420,7 @@ const FEATURES: FeatureMapping[] = [
         step: 2,
         cell: "C3",
         text: "Saklar (ID 6 & 7)",
-        note: "Raba lingkaran di tengah dengan dua garis pendek di kiri-kanannya; diputar 90° untuk ON/OFF.",
+        note: "Raba tuas saklar geser timbul di bagian atas balok untuk mengubah posisi ON/OFF.",
       },
       {
         step: 3,
@@ -979,7 +979,7 @@ const ARUCO_MARKERS = [
     id: "ID 6 & 7",
     name: "Saklar (switch)",
     category: "Kendali Arus",
-    tactile: "Lingkaran di tengah dengan dua garis pendek di kiri dan kanannya.",
+    tactile: "Tuas saklar geser timbul di bagian atas balok.",
     rotation: "Toggle 90°: Diputar 90° di tempatnya untuk mengubah posisi OFF ke ON.",
     note: "Menyambung atau memutus aliran listrik secara aman tanpa membongkar balok rangkaian.",
     color: "#7C3AED",

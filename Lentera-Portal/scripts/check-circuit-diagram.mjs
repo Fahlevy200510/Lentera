@@ -142,4 +142,12 @@ const activeOneGoodBranch = computeActiveCircuitCells(parallelOneReversed, "live
 assert.equal(activeOneGoodBranch.has("C2"), true);
 assert.equal(activeOneGoodBranch.has("E2"), false);
 
-console.log("CircuitDiagram self-check passed (6/6 scenario groups).");
+// (g) AI Tutor route check: switch physical description uses saklar geser (not round/lingkaran), and long answers are trimmed
+const tutorRoutePath = path.join(portalRoot, "app", "api", "tutor", "route.ts");
+const tutorSource = fs.readFileSync(tutorRoutePath, "utf8");
+assert.equal(/Saklar[\s\S]{0,60}lingkaran di tengah/i.test(tutorSource), false);
+assert.equal(/SAKLAR GESER/i.test(tutorSource), true);
+assert.equal(/function trimToConciseSentences/.test(tutorSource), true);
+
+console.log("CircuitDiagram & AI Tutor self-check passed (7/7 scenario groups).");
+
